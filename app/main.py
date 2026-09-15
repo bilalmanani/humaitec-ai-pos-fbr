@@ -2,7 +2,9 @@ from fastapi import FastAPI
 
 from app.database.database import Base, engine
 from app.models.product import Product
+from app.models.sale import Sale, SaleItem
 from app.routes.products import router as products_router
+from app.routes.sales import router as sales_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -12,6 +14,7 @@ app = FastAPI(
 )
 
 app.include_router(products_router)
+app.include_router(sales_router)
 
 
 @app.get("/")

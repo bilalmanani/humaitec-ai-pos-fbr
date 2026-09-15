@@ -5,12 +5,19 @@ from app.database.database import Base
 
 
 class Product(Base):
-    __tablename__="product"
+    __tablename__ = "products"
 
-    id:Mapped[int]=mapped_column(primary_key=True,index=True)
-    name:Mapped[str]=mapped_column(String(150),nullable=False)
-    sku:Mapped[str]=mapped_column(String(150),unique=True,nullable=False)
-    category: Mapped[str] = mapped_column(String(100), default="General")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    sku: Mapped[str] = mapped_column(
+        String(50),
+        unique=True,
+        nullable=False,
+    )
+    category: Mapped[str] = mapped_column(
+        String(100),
+        default="General",
+    )
     price: Mapped[float] = mapped_column(Float, nullable=False)
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
