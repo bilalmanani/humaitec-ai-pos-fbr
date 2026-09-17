@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.schemas.fbr_invoice import FBRInvoiceResponse
-from app.services.fbr_service import submit_mock_fbr_invoice
+from app.services.fbr_service import (
+    queue_invoice_for_retry,
+    retry_queued_invoice,
+    submit_mock_fbr_invoice,
+)
 from app.models.fbr_invoice import FBRInvoiceLog
 
 router = APIRouter(
@@ -32,3 +36,28 @@ def list_fbr_invoices(db: Session = Depends(get_db)):
         .order_by(FBRInvoiceLog.id.desc())
         .all()
     )
+
+@router.post(
+    "/invoices/{sale_id}/simulate-failure",
+    response_model=FBRInvoiceResponse,
+)
+def simulate_fbr_failure(sale_id: int, db: Session = Depends(get_db)):
+    invoice = queue_invoice_for_retry(sale_id, db)
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Sale not found.")
+
+    return invoice
+
+
+@router.post(
+    "/invoices/{sale_id}/retry",
+    response_model=FBRInvoiceResponse,
+)
+def retry_invoice(sale_id: int, db: Session = Depends(get_db)):
+    invoice = retry_queued_invoice(sale_id, db)
+
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Queued invoice not found.")
+
+    return invoice

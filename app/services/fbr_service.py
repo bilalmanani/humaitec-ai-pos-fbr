@@ -69,3 +69,61 @@ def submit_mock_fbr_invoice(sale_id: int, db: Session):
     db.refresh(invoice_log)
 
     return invoice_log
+
+
+def queue_invoice_for_retry(sale_id:int,db:Session):
+    sale=db.query(Sale).filter(Sale.id==sale_id).first()
+
+    if not sale:
+        return None
+
+    invoice = (
+    db.query(FBRInvoiceLog)
+    .filter(FBRInvoiceLog.sale_id == sale_id)
+    .first()
+)
+    if not invoice:
+        invoice=FBRInvoiceLog(
+            sale_id=sale_id,
+            status="QUEUED",
+            request_payload=json.dumps(
+                {"sale_number": sale.sale_number}
+            ),
+        )
+        db.add(invoice)
+
+    invoice.status = "QUEUED"
+    invoice.response_message = (
+        "Mock FBR connection failed. Invoice queued for retry."
+    )
+    db.commit()
+    db.refresh(invoice)
+
+    return invoice
+
+    return invoice
+
+def retry_queued_invoice(sale_id: int, db: Session):
+    invoice = (
+        db.query(FBRInvoiceLog)
+        .filter(FBRInvoiceLog.sale_id == sale_id)
+        .first()
+    )
+
+    if not invoice:
+        return None
+
+    if invoice.status != "QUEUED":
+        return invoice
+
+    invoice.retry_count += 1
+    invoice.status = "ACCEPTED_MOCK"
+    invoice.response_message = (
+        "Queued invoice retried and accepted by Mock FBR."
+    )
+
+    db.commit()
+    db.refresh(invoice)
+
+    return invoice
+
