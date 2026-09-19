@@ -185,3 +185,87 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+.table-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 13px;
+  text-align: left;
+}
+
+.data-table th {
+  background: #f5f8ff;
+  color: #334155;
+}
+
+.stock-low {
+  color: #c62828;
+  font-weight: bold;
+}
+
+.stock-ok {
+  color: #16803c;
+  font-weight: bold;
+}
+
+.checkout-form {
+  display: grid;
+  gap: 16px;
+  max-width: 600px;
+  margin-top: 20px;
+}
+
+.checkout-form label {
+  display: grid;
+  gap: 7px;
+  color: #334155;
+  font-weight: bold;
+}
+
+.checkout-form input,
+.checkout-form select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 11px;
+  background: white;
+  font-size: 15px;
+}
+
+.primary-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #2b68d8;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary-button:hover {
+  background: #1e55b7;
+}
+
+.checkout-message {
+  margin-top: 18px;
+  color: #16803c;
+  font-weight: bold;
+}
+
+.receipt-card {
+  max-width: 600px;
+  margin-top: 18px;
+  border-left: 4px solid #16803c;
+  border-radius: 8px;
+  padding: 16px;
+  background: #effaf2;
+}

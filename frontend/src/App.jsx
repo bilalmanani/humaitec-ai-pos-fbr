@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import ProductsPage from "./components/ProductsPage";
+import CheckoutPage from "./components/CheckoutPage";
 import "./index.css";
 
 const API_URL = "http://127.0.0.1:8000";
@@ -154,7 +156,11 @@ function App() {
           </article>
         </section>
 
-        {page === "AI Forecast" ? (
+        {page === "Products" ? (
+  <ProductsPage />
+) : page === "Checkout" ? (
+  <CheckoutPage />
+) : page === "AI Forecast" ? (
           <section className="welcome-card">
             <h3>AI Product Demand Forecast</h3>
             <p>
