@@ -8,12 +8,20 @@ from app.routes.sales import router as sales_router
 from app.models.fbr_invoice import FBRInvoiceLog
 from app.routes.fbr_invoices import router as fbr_router
 from app.routes.forecast import router as forecast_router
+from fastapi.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="HUMAITEC AI POS with FBR Integration",
     version="0.1.0",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(products_router)

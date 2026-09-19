@@ -1,0 +1,187 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #172033;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 245px;
+  padding: 28px 18px;
+  background: #14213d;
+  color: white;
+}
+
+.sidebar h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.sidebar-subtitle {
+  margin: 8px 0 32px;
+  color: #b8c4dd;
+  font-size: 14px;
+}
+
+.sidebar nav {
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item {
+  border: 0;
+  border-radius: 8px;
+  padding: 13px;
+  background: transparent;
+  color: #dce5f5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: #2b68d8;
+  color: white;
+}
+
+.main-content {
+  width: 100%;
+  padding: 36px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.small-label {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.topbar h2 {
+  margin: 5px 0 0;
+  font-size: 30px;
+}
+
+.status-badge {
+  border-radius: 20px;
+  padding: 9px 14px;
+  background: #fff4d6;
+  color: #935d00;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.metric-card,
+.welcome-card {
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 18px rgba(19, 33, 61, 0.08);
+}
+
+.metric-card {
+  padding: 22px;
+}
+
+.metric-card p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.metric-card h3 {
+  margin: 12px 0 0;
+  font-size: 28px;
+}
+
+.fbr-text {
+  color: #16803c;
+  font-size: 18px !important;
+}
+
+.welcome-card {
+  margin-top: 26px;
+  padding: 28px;
+}
+
+.welcome-card h3 {
+  margin-top: 0;
+  font-size: 23px;
+}
+
+.welcome-card p {
+  max-width: 720px;
+  color: #4b5565;
+  line-height: 1.6;
+}
+
+.feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.feature-list span {
+  border-radius: 20px;
+  padding: 9px 13px;
+  background: #e9f1ff;
+  color: #1c5fd1;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    display: block;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .main-content {
+    padding: 22px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    gap: 14px;
+    flex-direction: column;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
