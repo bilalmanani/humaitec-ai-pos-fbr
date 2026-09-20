@@ -204,12 +204,23 @@ function App() {
               and forecast product demand from sales history.
             </p>
 
-            <div className="feature-list">
-              <span>Inventory Management</span>
-              <span>POS Checkout</span>
-              <span>FBR Invoice Queue</span>
-              <span>AI Sales Forecasting</span>
-            </div>
+           <div className="feature-list">
+  <button onClick={() => setPage("Products")}>
+    Inventory Management
+  </button>
+
+  <button onClick={() => setPage("Checkout")}>
+    POS Checkout
+  </button>
+
+  <button onClick={() => setPage("FBR Invoices")}>
+    FBR Invoice Queue
+  </button>
+
+  <button onClick={() => setPage("AI Forecast")}>
+    AI Sales Forecasting
+  </button>
+</div>
           </section>
         )}
       </main>

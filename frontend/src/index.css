@@ -147,13 +147,20 @@ button {
   margin-top: 20px;
 }
 
-.feature-list span {
+.feature-list button {
+  border: 0;
   border-radius: 20px;
   padding: 9px 13px;
   background: #e9f1ff;
   color: #1c5fd1;
   font-size: 14px;
   font-weight: bold;
+  cursor: pointer;
+}
+
+.feature-list button:hover {
+  background: #2b68d8;
+  color: white;
 }
 
 @media (max-width: 900px) {
@@ -272,4 +279,32 @@ button {
 .submitted-label {
   color: #16803c;
   font-weight: bold;
+}
+
+.forecast-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.forecast-item {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  background: #f5f8ff;
+  border-left: 4px solid #2b68d8;
+  border-radius: 8px;
+}
+
+.forecast-item strong {
+  font-size: 17px;
+  color: #172033;
+}
+
+.forecast-item span {
+  color: #1c5fd1;
+}
+
+.forecast-item small {
+  color: #667085;
 }
