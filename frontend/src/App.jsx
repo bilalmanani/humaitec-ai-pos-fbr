@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+
 import ProductsPage from "./components/ProductsPage";
 import CheckoutPage from "./components/CheckoutPage";
+import SalesPage from "./components/SalesPage";
 import FBRInvoicesPage from "./components/FBRInvoicesPage";
+
 import "./index.css";
 
 const API_URL = "http://127.0.0.1:8000";
@@ -161,11 +164,14 @@ function App() {
           <ProductsPage />
         ) : page === "Checkout" ? (
           <CheckoutPage />
+        ) : page === "Sales" ? (
+          <SalesPage />
         ) : page === "FBR Invoices" ? (
           <FBRInvoicesPage />
         ) : page === "AI Forecast" ? (
           <section className="welcome-card">
             <h3>AI Product Demand Forecast</h3>
+
             <p>
               This prediction is calculated from your stored POS sales history.
             </p>
@@ -192,6 +198,7 @@ function App() {
         ) : (
           <section className="welcome-card">
             <h3>AI-Powered Point of Sale System</h3>
+
             <p>
               Manage inventory, create customer bills, submit Mock FBR invoices,
               and forecast product demand from sales history.
