@@ -171,10 +171,7 @@ function App() {
         ) : page === "AI Forecast" ? (
           <section className="welcome-card">
             <h3>AI Product Demand Forecast</h3>
-
-            <p>
-              This prediction is calculated from your stored POS sales history.
-            </p>
+            <p>This prediction is calculated from your stored POS sales history.</p>
 
             {forecastData.length === 0 ? (
               <p>No sales data is available for forecasting yet.</p>
@@ -189,7 +186,7 @@ function App() {
                       {forecast.predicted_next_day_quantity} units
                     </span>
 
-                    <small>{forecast.model_used}</small>
+                    <small>Forecast based on available sales history</small>
                   </div>
                 ))}
               </div>
@@ -204,23 +201,23 @@ function App() {
               and forecast product demand from sales history.
             </p>
 
-           <div className="feature-list">
-  <button onClick={() => setPage("Products")}>
-    Inventory Management
-  </button>
+            <div className="feature-list">
+              <button onClick={() => setPage("Products")}>
+                Inventory Management
+              </button>
 
-  <button onClick={() => setPage("Checkout")}>
-    POS Checkout
-  </button>
+              <button onClick={() => setPage("Checkout")}>
+                POS Checkout
+              </button>
 
-  <button onClick={() => setPage("FBR Invoices")}>
-    FBR Invoice Queue
-  </button>
+              <button onClick={() => setPage("FBR Invoices")}>
+                FBR Invoice Queue
+              </button>
 
-  <button onClick={() => setPage("AI Forecast")}>
-    AI Sales Forecasting
-  </button>
-</div>
+              <button onClick={() => setPage("AI Forecast")}>
+                AI Sales Forecasting
+              </button>
+            </div>
           </section>
         )}
       </main>

@@ -308,3 +308,36 @@ button {
 .forecast-item small {
   color: #667085;
 }
+
+.secondary-button {
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: white;
+  color: #334155;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button,
+.delete-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 11px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.edit-button {
+  background: #2b68d8;
+}
+
+.delete-button {
+  background: #d92d20;
+}

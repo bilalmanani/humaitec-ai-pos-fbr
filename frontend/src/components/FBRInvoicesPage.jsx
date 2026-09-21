@@ -71,8 +71,7 @@ function FBRInvoicesPage() {
     <section className="welcome-card">
       <h3>Mock FBR Invoice Submission</h3>
       <p>
-        This is a safe FBR mock/sandbox prototype. It does not claim production
-        FBR compliance.
+        This is a safe FBR mock/sandbox prototype. 
       </p>
 
       {message && <p className="checkout-message">{message}</p>}

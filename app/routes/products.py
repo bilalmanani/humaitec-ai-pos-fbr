@@ -3,7 +3,7 @@ from fastapi import APIRouter,Depends,HTTPException,status
 from app.models.product import Product
 from app.schemas.product import ProductCreate,ProductResponse
 from sqlalchemy.orm import Session
-
+from app.models.sale import SaleItem
 
 router=APIRouter(
     prefix="/products",
@@ -40,4 +40,67 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
 
     return product
 
+
+@router.put("/{product_id}", response_model=ProductResponse)
+def update_product(
+    product_id: int,
+    product_data: ProductCreate,
+    db: Session = Depends(get_db),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found.",
+        )
+
+    duplicate_sku = (
+        db.query(Product)
+        .filter(Product.sku == product_data.sku, Product.id != product_id)
+        .first()
+    )
+
+    if duplicate_sku:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Another product already uses this SKU.",
+        )
+
+    product.name = product_data.name
+    product.sku = product_data.sku
+    product.category = product_data.category
+    product.price = product_data.price
+    product.stock_quantity = product_data.stock_quantity
+
+    db.commit()
+    db.refresh(product)
+
+    return product
+
+
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found.",
+        )
+
+    used_in_sale = (
+        db.query(SaleItem)
+        .filter(SaleItem.product_id == product_id)
+        .first()
+    )
+
+    if used_in_sale:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This product cannot be deleted because it is used in a sale.",
+        )
+
+    db.delete(product)
+    db.commit()
 
