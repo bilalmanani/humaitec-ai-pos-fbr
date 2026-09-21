@@ -78,3 +78,48 @@ humaitec-ai-pos-fbr/
 ├── .gitignore
 ├── requirements.txt
 └── README.md
+
+
+```
+
+
+## Backend Setup
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload
+```
+
+Open FastAPI documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Frontend Setup
+
+Open a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the React frontend:
+
+```text
+http://localhost:5173
+```
+
+## Demo Flow
+
+1. Add products from the **Products** page.
+2. Create a sale from **Checkout**.
+3. Check that inventory stock decreases.
+4. View completed sales on the **Sales** page.
+5. Submit a sale from **FBR Invoices** to Mock FBR.
+6. View next-day demand on **AI Forecast**.
