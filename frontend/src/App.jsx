@@ -7,7 +7,8 @@ import FBRInvoicesPage from "./components/FBRInvoicesPage";
 
 import "./index.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function App() {
   const [page, setPage] = useState("Dashboard");
@@ -119,7 +120,7 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <header className="topbar">
+        {/* <header className="topbar">
           <div>
             <p className="small-label">HUMAITEC</p>
             <h2>{page}</h2>
@@ -128,7 +129,13 @@ function App() {
           <span className="status-badge">
             {dashboardData.backendStatus}
           </span>
-        </header>
+        </header> */}
+        <header className="topbar">
+  <div>
+    <p className="small-label">HUMAITEC</p>
+    <h2>{page}</h2>
+  </div>
+</header>
 
         {error && <p className="error-message">{error}</p>}
 

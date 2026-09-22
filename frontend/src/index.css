@@ -20,7 +20,8 @@ button {
 }
 
 .sidebar {
-  width: 245px;
+  width: 260px;
+  flex: 0 0 260px;
   padding: 28px 18px;
   background: #14213d;
   color: white;
@@ -29,8 +30,8 @@ button {
 .sidebar h1 {
   margin: 0;
   font-size: 24px;
+  white-space: nowrap;
 }
-
 .sidebar-subtitle {
   margin: 8px 0 32px;
   color: #b8c4dd;
