@@ -342,3 +342,109 @@ button {
 .delete-button {
   background: #d92d20;
 }
+
+.checkout-help {
+  margin-bottom: 20px;
+  padding: 12px;
+  border-left: 4px solid #2b68d8;
+  background: #f5f8ff;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(420px, 1.4fr);
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.checkout-label {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: #334155;
+  font-weight: bold;
+}
+
+.checkout-label input,
+.checkout-label select {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 11px;
+  background: white;
+  font-size: 15px;
+}
+
+.barcode-input {
+  border: 2px solid #2b68d8 !important;
+}
+
+.basket-panel {
+  border: 1px solid #dbe5f5;
+  border-radius: 12px;
+  padding: 18px;
+  background: #fbfdff;
+}
+
+.basket-panel h4 {
+  margin-top: 0;
+}
+
+.empty-basket {
+  color: #667085;
+}
+
+.basket-list {
+  display: grid;
+  gap: 10px;
+}
+
+.basket-item {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 70px 120px auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.basket-item small {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+}
+
+.basket-item input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  padding: 8px;
+}
+
+.checkout-summary {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #dbe5f5;
+}
+
+.checkout-summary p {
+  display: flex;
+  justify-content: space-between;
+  max-width: none;
+}
+
+.grand-total {
+  font-size: 20px;
+  color: #1c5fd1 !important;
+}
+
+@media (max-width: 900px) {
+  .checkout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .basket-item {
+    grid-template-columns: 1fr 70px;
+  }
+}
