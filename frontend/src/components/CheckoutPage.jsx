@@ -448,19 +448,64 @@ function CheckoutPage() {
       {message && <p className="checkout-message">{message}</p>}
 
       {receipt && (
-        <div className="receipt-card">
-          <h4>Sale Receipt</h4>
-          <p>
-            <strong>Sale Number:</strong> {receipt.sale_number}
-          </p>
-          <p>
-            <strong>Payment:</strong> {receipt.payment_method}
-          </p>
-          <p>
-            <strong>Total Amount:</strong> PKR {receipt.total_amount}
-          </p>
-        </div>
-      )}
+  <div className="receipt-card">
+    <h4>Sale Receipt</h4>
+
+    <div className="receipt-details">
+      <p>
+        <strong>Sale Number:</strong> {receipt.sale_number}
+      </p>
+      <p>
+        <strong>Payment:</strong> {receipt.payment_method}
+      </p>
+      <p>
+        <strong>Date:</strong>{" "}
+        {new Date(receipt.created_at).toLocaleString()}
+      </p>
+    </div>
+
+    <div className="receipt-table-wrapper">
+      <table className="receipt-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Line Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {receipt.items?.map((item, index) => (
+            <tr key={`${item.product_name}-${index}`}>
+              <td>{item.product_name}</td>
+              <td>PKR {Number(item.unit_price).toLocaleString()}</td>
+              <td>{item.quantity}</td>
+              <td>PKR {Number(item.line_total).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div className="receipt-totals">
+      <p>
+        <span>Subtotal</span>
+        <strong>PKR {Number(receipt.subtotal).toLocaleString()}</strong>
+      </p>
+
+      <p>
+        <span>Discount</span>
+        <strong>PKR {Number(receipt.discount).toLocaleString()}</strong>
+      </p>
+
+      <p className="receipt-grand-total">
+        <span>Total Amount</span>
+        <strong>PKR {Number(receipt.total_amount).toLocaleString()}</strong>
+      </p>
+    </div>
+  </div>
+)}
     </section>
   );
 }

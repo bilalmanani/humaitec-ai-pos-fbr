@@ -1,62 +1,73 @@
-from sqlalchemy.orm import Session
-from uuid import uuid4
-from fastapi import APIRouter,HTTPException,Depends,status
-from app.database.database import get_db
-
-from app.models.product import Product
-from app.schemas.sale import CheckoutRequest,SaleReceipt
-from app.models.sale import Sale,SaleItem
 from datetime import datetime
+from uuid import uuid4
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session, selectinload
+
+from app.database.database import get_db
+from app.models.product import Product
+from app.models.sale import Sale, SaleItem
+from app.schemas.sale import CheckoutRequest, SaleReceipt
 
 
 router = APIRouter(
     prefix="/sales",
     tags=["Sales and Checkout"],
 )
-@router.post("/checkout",
-             response_model=SaleReceipt,
-             status_code=status.HTTP_201_CREATED
-)
 
-def checkout(data:CheckoutRequest,db:Session=Depends(get_db)):
+
+@router.post(
+    "/checkout",
+    response_model=SaleReceipt,
+    status_code=status.HTTP_201_CREATED,
+)
+def checkout(data: CheckoutRequest, db: Session = Depends(get_db)):
     subtotal = 0.0
     sale_items_data = []
 
     for item in data.items:
-        product=(db.query(Product).filter(Product.id==item.product_id).first())
+        product = (
+            db.query(Product)
+            .filter(Product.id == item.product_id)
+            .first()
+        )
 
         if not product or not product.is_active:
             raise HTTPException(
-                status_code=404,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Product {item.product_id} was not found.",
             )
 
-        if product.stock_quantity<item.quantity:
+        if product.stock_quantity < item.quantity:
             raise HTTPException(
-                status_code=400,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Insufficient stock for {product.name}.",
             )
+
         line_total = product.price * item.quantity
         subtotal += line_total
 
         sale_items_data.append(
-             {
+            {
                 "product": product,
                 "quantity": item.quantity,
                 "line_total": line_total,
             }
         )
 
-        if data.discount > subtotal:
-             
-            raise HTTPException(
-            status_code=400,
+    # This must be after the loop.
+    # Now subtotal contains the amount for all items in the basket.
+    if data.discount > subtotal:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Discount cannot be greater than the subtotal.",
-            )
+        )
 
-        total_amount = subtotal - data.discount
-    sale_number = f"POS-{datetime.now():%Y%m%d}-{uuid4().hex[:6].upper()}"
+    total_amount = subtotal - data.discount
+
+    sale_number = (
+        f"POS-{datetime.now():%Y%m%d}-{uuid4().hex[:6].upper()}"
+    )
 
     sale = Sale(
         sale_number=sale_number,
@@ -88,17 +99,22 @@ def checkout(data:CheckoutRequest,db:Session=Depends(get_db)):
         )
 
     db.commit()
-    db.refresh(sale)
+
+    sale = (
+        db.query(Sale)
+        .options(selectinload(Sale.items))
+        .filter(Sale.id == sale.id)
+        .first()
+    )
 
     return sale
 
 
 @router.get("/", response_model=list[SaleReceipt])
 def list_sales(db: Session = Depends(get_db)):
-    return db.query(Sale).order_by(Sale.id.desc()).all()
-
-        
-
-
-
-
+    return (
+        db.query(Sale)
+        .options(selectinload(Sale.items))
+        .order_by(Sale.id.desc())
+        .all()
+    )
