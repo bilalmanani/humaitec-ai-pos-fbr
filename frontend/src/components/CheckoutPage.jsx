@@ -12,6 +12,7 @@ function CheckoutPage() {
   const [heldOrders, setHeldOrders] = useState([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [cashTendered, setCashTendered] = useState("");
   const [message, setMessage] = useState("");
   const [receipt, setReceipt] = useState(null);
 
@@ -130,6 +131,12 @@ function CheckoutPage() {
 
   const discountAmount = (subtotal * safeDiscountPercentage) / 100;
   const totalAmount = subtotal - discountAmount;
+  const cashReceived = Number(cashTendered) || 0;
+
+  const changeDue =
+    paymentMethod === "cash" && cashReceived > totalAmount
+      ? cashReceived - totalAmount
+      : 0;
 
   function addProductToCart(product, selectedQuantity = quantity) {
     const requestedQuantity = Number(selectedQuantity);
@@ -247,11 +254,14 @@ function CheckoutPage() {
   }
 
   function clearBasket() {
+
     setCart([]);
     setDiscountPercentage(0);
+    setCashTendered("");
     setReceipt(null);
     setMessage("Basket cleared.");
     barcodeInputRef.current?.focus();
+
   }
 
   async function holdCurrentOrder() {
@@ -374,6 +384,12 @@ function CheckoutPage() {
       setMessage("Add at least one product to the basket.");
       return;
     }
+    if (paymentMethod === "cash" && cashReceived < totalAmount) {
+      setMessage(
+        `Cash received must be at least PKR ${totalAmount.toLocaleString()}.`
+      );
+      return;
+    }
 
     try {
       setMessage("");
@@ -399,9 +415,14 @@ function CheckoutPage() {
         throw new Error(data.detail || "Could not complete sale.");
       }
 
-      setReceipt(data);
+      setReceipt({
+        ...data,
+        cash_received: paymentMethod === "cash" ? cashReceived : null,
+        change_due: paymentMethod === "cash" ? changeDue : null,
+      });
       setCart([]);
       setDiscountPercentage(0);
+      setCashTendered("");
       setSearchValue("");
       setMessage("Sale completed successfully.");
       await loadProducts();
@@ -554,6 +575,25 @@ function CheckoutPage() {
                 <option value="jazzcash">JazzCash</option>
               </select>
             </label>
+            {paymentMethod === "cash" && (
+              <>
+                <label className="checkout-label">
+                  Cash Received
+                  <input
+                    type="number"
+                    min="0"
+                    value={cashTendered}
+                    onChange={(event) => setCashTendered(event.target.value)}
+                    placeholder="Enter cash received from customer"
+                  />
+                </label>
+
+                <p className="change-due">
+                  <span>Change Due</span>
+                  <strong>PKR {changeDue.toLocaleString()}</strong>
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -702,6 +742,23 @@ function CheckoutPage() {
                 PKR {Number(receipt.total_amount).toLocaleString()}
               </strong>
             </p>
+            {receipt.payment_method === "cash" && (
+  <>
+    <p>
+      <span>Cash Received</span>
+      <strong>
+        PKR {Number(receipt.cash_received).toLocaleString()}
+      </strong>
+    </p>
+
+    <p className="receipt-grand-total">
+      <span>Change Due</span>
+      <strong>
+        PKR {Number(receipt.change_due).toLocaleString()}
+      </strong>
+    </p>
+  </>
+)}
           </div>
         </section>
       )}
