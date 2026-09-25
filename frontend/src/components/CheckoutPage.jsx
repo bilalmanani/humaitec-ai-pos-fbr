@@ -9,6 +9,7 @@ function CheckoutPage() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [cart, setCart] = useState([]);
+  const [heldOrders, setHeldOrders] = useState([]);
   const [discountPercentage, setDiscountPercentage] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [message, setMessage] = useState("");
@@ -28,11 +29,30 @@ function CheckoutPage() {
       }
 
       const data = await response.json();
-      setProducts(data);
+      const activeProducts = data.filter((product) => product.is_active);
 
-      if (data.length > 0) {
-        setSelectedProductId(String(data[0].id));
+      setProducts(activeProducts);
+
+      if (activeProducts.length > 0) {
+        setSelectedProductId((currentId) =>
+          currentId ? currentId : String(activeProducts[0].id)
+        );
       }
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function loadHeldOrders() {
+    try {
+      const response = await fetch(`${API_URL}/held-orders/`);
+
+      if (!response.ok) {
+        throw new Error("Could not load held orders.");
+      }
+
+      const data = await response.json();
+      setHeldOrders(data);
     } catch (error) {
       setMessage(error.message);
     }
@@ -40,6 +60,7 @@ function CheckoutPage() {
 
   useEffect(() => {
     loadProducts();
+    loadHeldOrders();
   }, []);
 
   useEffect(() => {
@@ -47,7 +68,7 @@ function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    function handleHotkeys(event) {
+    function handleKeyboardShortcuts(event) {
       if (event.key === "F1") {
         event.preventDefault();
         barcodeInputRef.current?.focus();
@@ -56,18 +77,16 @@ function CheckoutPage() {
       if (event.key === "F2") {
         event.preventDefault();
         quantityInputRef.current?.focus();
-        quantityInputRef.current?.select();
       }
 
       if (event.key === "F3") {
         event.preventDefault();
         discountInputRef.current?.focus();
-        discountInputRef.current?.select();
       }
 
       if (event.key === "F4") {
         event.preventDefault();
-        checkoutButtonRef.current?.click();
+        checkoutButtonRef.current?.focus();
       }
 
       if (event.key === "Escape") {
@@ -76,73 +95,69 @@ function CheckoutPage() {
       }
     }
 
-    window.addEventListener("keydown", handleHotkeys);
+    window.addEventListener("keydown", handleKeyboardShortcuts);
 
     return () => {
-      window.removeEventListener("keydown", handleHotkeys);
+      window.removeEventListener("keydown", handleKeyboardShortcuts);
     };
   }, []);
 
   const filteredProducts = useMemo(() => {
-    const query = searchValue.trim().toLowerCase();
+    const search = searchValue.trim().toLowerCase();
 
-    if (!query) {
+    if (!search) {
       return products;
     }
 
     return products.filter(
       (product) =>
-        product.name.toLowerCase().includes(query) ||
-        product.sku.toLowerCase().includes(query)
+        product.name.toLowerCase().includes(search) ||
+        product.sku.toLowerCase().includes(search)
     );
   }, [products, searchValue]);
 
-  const subtotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
+  const subtotal = useMemo(() => {
+    return cart.reduce(
+      (total, item) => total + Number(item.price) * item.quantity,
+      0
+    );
+  }, [cart]);
 
   const safeDiscountPercentage = Math.min(
     Math.max(Number(discountPercentage) || 0, 0),
     100
   );
 
-  const discountAmount = Number(
-    ((subtotal * safeDiscountPercentage) / 100).toFixed(2)
-  );
+  const discountAmount = (subtotal * safeDiscountPercentage) / 100;
+  const totalAmount = subtotal - discountAmount;
 
-  const totalAmount = Math.max(subtotal - discountAmount, 0);
+  function addProductToCart(product, selectedQuantity = quantity) {
+    const requestedQuantity = Number(selectedQuantity);
 
-  function addProductToCart(product) {
-    if (!product) {
-      setMessage("Please select a product.");
-      return;
-    }
-
-    const requestedQuantity = Number(quantity);
-
-    if (requestedQuantity < 1) {
+    if (!requestedQuantity || requestedQuantity < 1) {
       setMessage("Quantity must be at least 1.");
       return;
     }
 
-    const existingItem = cart.find((item) => item.id === product.id);
-    const currentQuantity = existingItem ? existingItem.quantity : 0;
-
-    if (currentQuantity + requestedQuantity > product.stock_quantity) {
-      setMessage(
-        `Only ${product.stock_quantity} unit(s) of ${product.name} are available.`
-      );
+    if (requestedQuantity > product.stock_quantity) {
+      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
       return;
     }
 
     setCart((currentCart) => {
-      const itemExists = currentCart.find((item) => item.id === product.id);
+      const existingItem = currentCart.find((item) => item.id === product.id);
 
-      if (itemExists) {
+      if (existingItem) {
+        const newQuantity = existingItem.quantity + requestedQuantity;
+
+        if (newQuantity > product.stock_quantity) {
+          setMessage(`Only ${product.stock_quantity} unit(s) available.`);
+          return currentCart;
+        }
+
         return currentCart.map((item) =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + requestedQuantity }
+            ? { ...item, quantity: newQuantity }
             : item
         );
       }
@@ -150,53 +165,69 @@ function CheckoutPage() {
       return [
         ...currentCart,
         {
-          id: product.id,
-          name: product.name,
-          sku: product.sku,
-          price: Number(product.price),
-          stock_quantity: product.stock_quantity,
+          ...product,
           quantity: requestedQuantity,
         },
       ];
     });
 
-    setMessage(`${product.name} added to basket.`);
-    setQuantity(1);
+    setMessage("");
     setSearchValue("");
+    setQuantity(1);
     barcodeInputRef.current?.focus();
   }
 
-  function handleBarcodeEnter(event) {
-    if (event.key !== "Enter") {
-      return;
-    }
-
-    event.preventDefault();
-
-    const scannedSku = searchValue.trim().toLowerCase();
-
+  function addSelectedProduct() {
     const product = products.find(
-      (item) => item.sku.toLowerCase() === scannedSku
+      (item) => item.id === Number(selectedProductId)
     );
 
     if (!product) {
-      setMessage("SKU was not found. Press F1 and search by product name.");
+      setMessage("Please select a product.");
       return;
     }
 
     addProductToCart(product);
   }
 
-  function updateCartQuantity(productId, newQuantity) {
-    const product = products.find((item) => item.id === productId);
-    const numericQuantity = Number(newQuantity);
-
-    if (!product || numericQuantity < 1) {
+  function handleBarcodeKeyDown(event) {
+    if (event.key !== "Enter") {
       return;
     }
 
-    if (numericQuantity > product.stock_quantity) {
-      setMessage(`Only ${product.stock_quantity} unit(s) are available.`);
+    event.preventDefault();
+
+    const code = searchValue.trim().toLowerCase();
+
+    if (!code) {
+      return;
+    }
+
+    const matchedProduct = products.find(
+      (product) =>
+        product.sku.toLowerCase() === code ||
+        product.name.toLowerCase() === code
+    );
+
+    if (!matchedProduct) {
+      setMessage("No product found for this barcode or search value.");
+      return;
+    }
+
+    addProductToCart(matchedProduct);
+  }
+
+  function updateCartQuantity(productId, newQuantity) {
+    const numericQuantity = Number(newQuantity);
+
+    if (!numericQuantity || numericQuantity < 1) {
+      return;
+    }
+
+    const product = products.find((item) => item.id === productId);
+
+    if (product && numericQuantity > product.stock_quantity) {
+      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
       return;
     }
 
@@ -209,7 +240,7 @@ function CheckoutPage() {
     );
   }
 
-  function removeCartItem(productId) {
+  function removeFromCart(productId) {
     setCart((currentCart) =>
       currentCart.filter((item) => item.id !== productId)
     );
@@ -223,19 +254,130 @@ function CheckoutPage() {
     barcodeInputRef.current?.focus();
   }
 
-  async function handleCheckout(event) {
-    event.preventDefault();
-
+  async function holdCurrentOrder() {
     if (cart.length === 0) {
-      setMessage("Add at least one product before checkout.");
-      barcodeInputRef.current?.focus();
+      setMessage("Add at least one product before holding an order.");
       return;
     }
 
-    setMessage("");
-    setReceipt(null);
+    try {
+      setMessage("");
+      setReceipt(null);
+
+      const response = await fetch(`${API_URL}/held-orders/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: cart,
+          discount_percentage: safeDiscountPercentage,
+          payment_method: paymentMethod,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Could not hold the order.");
+      }
+
+      setCart([]);
+      setDiscountPercentage(0);
+      setSearchValue("");
+      setMessage(`${data.hold_number} saved successfully.`);
+      await loadHeldOrders();
+      barcodeInputRef.current?.focus();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function deleteHeldOrder(heldOrderId) {
+    const response = await fetch(
+      `${API_URL}/held-orders/${heldOrderId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Could not delete held order.");
+    }
+
+    await loadHeldOrders();
+  }
+
+  async function resumeHeldOrder(heldOrder) {
+    const unavailableItem = heldOrder.items.find((item) => {
+      const currentProduct = products.find(
+        (product) => product.id === item.id
+      );
+
+      return (
+        !currentProduct ||
+        currentProduct.stock_quantity < item.quantity
+      );
+    });
+
+    if (unavailableItem) {
+      setMessage(
+        `Cannot resume order: ${unavailableItem.name} does not have enough stock.`
+      );
+      return;
+    }
 
     try {
+      await deleteHeldOrder(heldOrder.id);
+
+      setCart(
+        heldOrder.items.map((item) => ({
+          ...item,
+          price: Number(item.price),
+        }))
+      );
+
+      setDiscountPercentage(heldOrder.discount_percentage);
+      setPaymentMethod(heldOrder.payment_method);
+      setReceipt(null);
+      setSearchValue("");
+      setMessage(`${heldOrder.hold_number} resumed successfully.`);
+      barcodeInputRef.current?.focus();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function handleDeleteHeldOrder(heldOrderId) {
+    const shouldDelete = window.confirm(
+      "Do you want to permanently delete this held order?"
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      await deleteHeldOrder(heldOrderId);
+      setMessage("Held order deleted successfully.");
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function completeSale(event) {
+    event.preventDefault();
+
+    if (cart.length === 0) {
+      setMessage("Add at least one product to the basket.");
+      return;
+    }
+
+    try {
+      setMessage("");
+
       const response = await fetch(`${API_URL}/sales/checkout`, {
         method: "POST",
         headers: {
@@ -254,15 +396,14 @@ function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Checkout failed.");
+        throw new Error(data.detail || "Could not complete sale.");
       }
 
       setReceipt(data);
-      setMessage("Sale completed successfully.");
       setCart([]);
       setDiscountPercentage(0);
       setSearchValue("");
-
+      setMessage("Sale completed successfully.");
       await loadProducts();
       barcodeInputRef.current?.focus();
     } catch (error) {
@@ -270,50 +411,41 @@ function CheckoutPage() {
     }
   }
 
-  const selectedProduct = products.find(
-    (product) => product.id === Number(selectedProductId)
-  );
-
   return (
     <section className="welcome-card">
-      <h3>Fast POS Checkout</h3>
+      <h3>POS Checkout</h3>
 
       <p className="checkout-help">
-        Scanner ready: scan an SKU and press Enter. Hotkeys: F1 Lookup, F2
-        Quantity, F3 Discount, F4 Checkout, ESC Clear Basket.
+        F1: Product search | F2: Quantity | F3: Discount % | F4:
+        Checkout | ESC: Clear basket
       </p>
 
       <div className="checkout-grid">
         <div>
           <label className="checkout-label">
-            Barcode / SKU / Product Search
+            Barcode / Product Search
             <input
               ref={barcodeInputRef}
               className="barcode-input"
-              type="text"
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              onKeyDown={handleBarcodeEnter}
-              placeholder="Scan barcode or type product name"
+              onKeyDown={handleBarcodeKeyDown}
+              placeholder="Scan barcode, SKU, or type product name"
             />
           </label>
 
           <label className="checkout-label">
-            Product Lookup
+            Product
             <select
               value={selectedProductId}
               onChange={(event) => setSelectedProductId(event.target.value)}
             >
-              {filteredProducts.length === 0 ? (
-                <option value="">No product found</option>
-              ) : (
-                filteredProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} — {product.sku} — PKR {product.price} —
-                    Stock: {product.stock_quantity}
-                  </option>
-                ))
-              )}
+              {filteredProducts.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} — PKR {product.price} — Stock:{" "}
+                  {product.stock_quantity}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -329,16 +461,16 @@ function CheckoutPage() {
           </label>
 
           <button
-            className="secondary-button"
             type="button"
-            onClick={() => addProductToCart(selectedProduct)}
+            className="primary-button"
+            onClick={addSelectedProduct}
           >
-            Add Item to Basket
+            Add to Basket
           </button>
         </div>
 
         <div className="basket-panel">
-          <h4>Active Basket</h4>
+          <h4>Current Basket</h4>
 
           {cart.length === 0 ? (
             <p className="empty-basket">No items added yet.</p>
@@ -349,14 +481,13 @@ function CheckoutPage() {
                   <div>
                     <strong>{item.name}</strong>
                     <small>
-                      {item.sku} · PKR {item.price.toLocaleString()}
+                      PKR {Number(item.price).toLocaleString()} each
                     </small>
                   </div>
 
                   <input
                     type="number"
                     min="1"
-                    max={item.stock_quantity}
                     value={item.quantity}
                     onChange={(event) =>
                       updateCartQuantity(item.id, event.target.value)
@@ -364,13 +495,14 @@ function CheckoutPage() {
                   />
 
                   <strong>
-                    PKR {(item.price * item.quantity).toLocaleString()}
+                    PKR{" "}
+                    {(Number(item.price) * item.quantity).toLocaleString()}
                   </strong>
 
                   <button
-                    className="delete-button"
                     type="button"
-                    onClick={() => removeCartItem(item.id)}
+                    className="delete-button"
+                    onClick={() => removeFromCart(item.id)}
                   >
                     Remove
                   </button>
@@ -386,7 +518,7 @@ function CheckoutPage() {
             </p>
 
             <label className="checkout-label">
-              Basket Discount % (F3)
+              Discount Percentage
               <input
                 ref={discountInputRef}
                 type="number"
@@ -396,43 +528,52 @@ function CheckoutPage() {
                 onChange={(event) =>
                   setDiscountPercentage(event.target.value)
                 }
-                placeholder="Example: 10 means 10%"
+                placeholder="Example: 10 means 10% discount"
               />
             </label>
 
-            <p className="discount-readout">
-              Discount: {safeDiscountPercentage}% — PKR{" "}
-              {discountAmount.toLocaleString()}
+            <p>
+              <span>Discount</span>
+              <strong>PKR {discountAmount.toLocaleString()}</strong>
             </p>
 
             <p className="grand-total">
-              <span>Total</span>
+              <span>Total Amount</span>
               <strong>PKR {totalAmount.toLocaleString()}</strong>
             </p>
+
+            <label className="checkout-label">
+              Payment Method
+              <select
+                value={paymentMethod}
+                onChange={(event) => setPaymentMethod(event.target.value)}
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="easypaisa">EasyPaisa</option>
+                <option value="jazzcash">JazzCash</option>
+              </select>
+            </label>
           </div>
         </div>
       </div>
 
-      <form className="checkout-form" onSubmit={handleCheckout}>
-        <label>
-          Payment Method
-          <select
-            value={paymentMethod}
-            onChange={(event) => setPaymentMethod(event.target.value)}
-          >
-            <option value="cash">Cash</option>
-            <option value="card">Credit / Debit Card</option>
-            <option value="online">Online Payment</option>
-          </select>
-        </label>
-
+      <form className="checkout-form" onSubmit={completeSale}>
         <div className="action-buttons">
           <button
             ref={checkoutButtonRef}
             className="primary-button"
             type="submit"
           >
-            Complete Sale (F4)
+            Complete Sale
+          </button>
+
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={holdCurrentOrder}
+          >
+            Hold Current Order
           </button>
 
           <button
@@ -440,72 +581,130 @@ function CheckoutPage() {
             type="button"
             onClick={clearBasket}
           >
-            Clear Basket (ESC)
+            Clear Basket
           </button>
         </div>
       </form>
 
+      <section className="held-orders-panel">
+        <div className="held-orders-heading">
+          <h4>Held Orders</h4>
+          <span>{heldOrders.length}</span>
+        </div>
+
+        {heldOrders.length === 0 ? (
+          <p className="empty-basket">No held orders available.</p>
+        ) : (
+          <div className="held-orders-list">
+            {heldOrders.map((order) => {
+              const orderTotal = order.items.reduce(
+                (total, item) =>
+                  total + Number(item.price) * item.quantity,
+                0
+              );
+
+              return (
+                <div className="held-order-item" key={order.id}>
+                  <div>
+                    <strong>{order.hold_number}</strong>
+                    <small>
+                      {order.items.length} item(s) · PKR{" "}
+                      {orderTotal.toLocaleString()}
+                    </small>
+                  </div>
+
+                  <div className="held-order-actions">
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={() => resumeHeldOrder(order)}
+                    >
+                      Resume
+                    </button>
+
+                    <button
+                      className="delete-button"
+                      type="button"
+                      onClick={() => handleDeleteHeldOrder(order.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       {message && <p className="checkout-message">{message}</p>}
 
       {receipt && (
-  <div className="receipt-card">
-    <h4>Sale Receipt</h4>
+        <section className="receipt-card">
+          <h3>Sale Receipt</h3>
 
-    <div className="receipt-details">
-      <p>
-        <strong>Sale Number:</strong> {receipt.sale_number}
-      </p>
-      <p>
-        <strong>Payment:</strong> {receipt.payment_method}
-      </p>
-      <p>
-        <strong>Date:</strong>{" "}
-        {new Date(receipt.created_at).toLocaleString()}
-      </p>
-    </div>
+          <div className="receipt-details">
+            <p>
+              <strong>Sale Number:</strong> {receipt.sale_number}
+            </p>
 
-    <div className="receipt-table-wrapper">
-      <table className="receipt-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Unit Price</th>
-            <th>Quantity</th>
-            <th>Line Total</th>
-          </tr>
-        </thead>
+            <p>
+              <strong>Payment:</strong> {receipt.payment_method}
+            </p>
+          </div>
 
-        <tbody>
-          {receipt.items?.map((item, index) => (
-            <tr key={`${item.product_name}-${index}`}>
-              <td>{item.product_name}</td>
-              <td>PKR {Number(item.unit_price).toLocaleString()}</td>
-              <td>{item.quantity}</td>
-              <td>PKR {Number(item.line_total).toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          <div className="receipt-table-wrapper">
+            <table className="receipt-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Unit Price</th>
+                  <th>Quantity</th>
+                  <th>Line Total</th>
+                </tr>
+              </thead>
 
-    <div className="receipt-totals">
-      <p>
-        <span>Subtotal</span>
-        <strong>PKR {Number(receipt.subtotal).toLocaleString()}</strong>
-      </p>
+              <tbody>
+                {receipt.items.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.product_name}</td>
+                    <td>
+                      PKR {Number(item.unit_price).toLocaleString()}
+                    </td>
+                    <td>{item.quantity}</td>
+                    <td>
+                      PKR {Number(item.line_total).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <p>
-        <span>Discount</span>
-        <strong>PKR {Number(receipt.discount).toLocaleString()}</strong>
-      </p>
+          <div className="receipt-totals">
+            <p>
+              <span>Subtotal</span>
+              <strong>
+                PKR {Number(receipt.subtotal).toLocaleString()}
+              </strong>
+            </p>
 
-      <p className="receipt-grand-total">
-        <span>Total Amount</span>
-        <strong>PKR {Number(receipt.total_amount).toLocaleString()}</strong>
-      </p>
-    </div>
-  </div>
-)}
+            <p>
+              <span>Discount</span>
+              <strong>
+                PKR {Number(receipt.discount).toLocaleString()}
+              </strong>
+            </p>
+
+            <p className="receipt-grand-total">
+              <span>Total Amount</span>
+              <strong>
+                PKR {Number(receipt.total_amount).toLocaleString()}
+              </strong>
+            </p>
+          </div>
+        </section>
+      )}
     </section>
   );
 }

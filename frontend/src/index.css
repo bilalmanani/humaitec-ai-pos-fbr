@@ -530,3 +530,87 @@ button {
   font-size: 17px;
   font-weight: 700;
 }
+
+.held-orders-panel {
+  margin-top: 28px;
+  padding: 18px;
+  border: 1px solid #dbe5f5;
+  border-radius: 12px;
+  background: #fbfdff;
+  
+}
+
+.held-orders-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.held-orders-heading h4 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.held-orders-heading span {
+  min-width: 28px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: #e9f1ff;
+  color: #1c5fd1;
+  text-align: center;
+  font-weight: bold;
+}
+
+.held-orders-list {
+  display: grid;
+  gap: 10px;
+}
+
+.held-order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #dbe5f5;
+  border-radius: 8px;
+  background: white;
+ 
+}
+
+.held-order-item small {
+  display: block;
+  margin-top: 5px;
+  color: #667085;
+}
+
+.held-order-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.held-order-actions .primary-button,
+.held-order-actions .delete-button {
+  padding: 8px 12px;
+}
+
+@media (max-width: 600px) {
+  .held-order-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.secondary-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 18px;
+  background: #f59e0b;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.secondary-button:hover {
+  background: #d97706;
+}
