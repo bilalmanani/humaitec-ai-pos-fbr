@@ -414,12 +414,13 @@ function CheckoutPage() {
       if (!response.ok) {
         throw new Error(data.detail || "Could not complete sale.");
       }
+      setReceipt(data);
 
-      setReceipt({
-        ...data,
-        cash_received: paymentMethod === "cash" ? cashReceived : null,
-        change_due: paymentMethod === "cash" ? changeDue : null,
-      });
+      // setReceipt({
+      //   ...data,
+      //   cash_received: paymentMethod === "cash" ? cashReceived : null,
+      //   change_due: paymentMethod === "cash" ? changeDue : null,
+      // });
       setCart([]);
       setDiscountPercentage(0);
       setCashTendered("");
@@ -743,22 +744,22 @@ function CheckoutPage() {
               </strong>
             </p>
             {receipt.payment_method === "cash" && (
-  <>
-    <p>
-      <span>Cash Received</span>
-      <strong>
-        PKR {Number(receipt.cash_received).toLocaleString()}
-      </strong>
-    </p>
+              <>
+                {/* <p>
+                  <span>Cash Received</span>
+                  <strong>
+                    PKR {Number(receipt.cash_received).toLocaleString()}
+                  </strong>
+                </p>
 
-    <p className="receipt-grand-total">
-      <span>Change Due</span>
-      <strong>
-        PKR {Number(receipt.change_due).toLocaleString()}
-      </strong>
-    </p>
-  </>
-)}
+                <p className="receipt-grand-total">
+                  <span>Change Due</span>
+                  <strong>
+                    PKR {Number(receipt.change_due).toLocaleString()}
+                  </strong>
+                </p> */}
+              </>
+            )}
           </div>
         </section>
       )}
