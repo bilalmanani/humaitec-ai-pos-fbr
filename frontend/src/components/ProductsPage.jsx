@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./ProductsPage.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -9,6 +10,9 @@ function ProductsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [showProductForm, setShowProductForm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -58,13 +62,14 @@ function ProductsPage() {
     });
 
     setEditingId(null);
+    setShowProductForm(false);
   }
 
   function startEdit(product) {
     setError("");
     setMessage("");
-
     setEditingId(product.id);
+    setShowProductForm(true);
 
     setFormData({
       name: product.name,
@@ -102,7 +107,7 @@ function ProductsPage() {
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
-        method: method,
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -162,152 +167,274 @@ function ProductsPage() {
     }
   }
 
+  const lowStockCount = products.filter(
+    (product) => product.stock_quantity <= 5
+  ).length;
+
+  const totalInventoryValue = products.reduce(
+    (total, product) =>
+      total + Number(product.price || 0) * Number(product.stock_quantity || 0),
+    0
+  );
+
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStock =
+      stockFilter === "all" ||
+      (stockFilter === "low" && product.stock_quantity <= 5) ||
+      (stockFilter === "available" && product.stock_quantity > 5);
+
+    return matchesSearch && matchesStock;
+  });
+
   return (
-    <section className="welcome-card">
-      <h3>{editingId ? "Edit Product" : "Product Inventory"}</h3>
+    <section className="products-page">
+      <div className="products-page-header">
+        <div>
+          <p className="eyebrow">INVENTORY MANAGEMENT</p>
+          <h3>Products</h3>
+          <p>Manage product prices, SKUs, categories, and available stock.</p>
+        </div>
 
-      <p>
-        {editingId
-          ? "Update the selected product details."
-          : "Add, edit, and delete products ."}
-      </p>
-
-      <form className="checkout-form" onSubmit={handleSubmit}>
-        <label>
-          Product Name
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Example: Wireless Mouse"
-            required
-          />
-        </label>
-
-        <label>
-          SKU
-          <input
-            type="text"
-            name="sku"
-            value={formData.sku}
-            onChange={handleChange}
-            placeholder="Example: WM-001"
-            required
-          />
-        </label>
-
-        <label>
-          Category
-          <input
-            type="text"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        <label>
-          Price (PKR)
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            min="1"
-            step="0.01"
-            required
-          />
-        </label>
-
-        <label>
-          Stock Quantity
-          <input
-            type="number"
-            name="stock_quantity"
-            value={formData.stock_quantity}
-            onChange={handleChange}
-            min="0"
-            required
-          />
-        </label>
-
-        <button className="primary-button" type="submit">
-          {editingId ? "Update Product" : "Add Product"}
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => {
+            resetForm();
+            setShowProductForm(true);
+          }}
+        >
+          + Add Product
         </button>
+      </div>
 
-        {editingId && (
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={resetForm}
-          >
-            Cancel Edit
-          </button>
-        )}
-      </form>
+      <section className="inventory-summary">
+        <article>
+          <span className="inventory-summary-icon blue">□</span>
+          <div>
+            <small>Total Products</small>
+            <strong>{products.length}</strong>
+          </div>
+        </article>
+
+        <article>
+          <span className="inventory-summary-icon orange">!</span>
+          <div>
+            <small>Low Stock</small>
+            <strong>{lowStockCount}</strong>
+          </div>
+        </article>
+
+        <article>
+          <span className="inventory-summary-icon green">₨</span>
+          <div>
+            <small>Inventory Value</small>
+            <strong>PKR {totalInventoryValue.toLocaleString()}</strong>
+          </div>
+        </article>
+      </section>
+
+      {showProductForm && (
+        <section className="product-form-card">
+          <div className="product-form-heading">
+            <div>
+              <h4>{editingId ? "Edit Product" : "Add New Product"}</h4>
+              <p>
+                {editingId
+                  ? "Update the selected inventory item."
+                  : "Enter the product details below."}
+              </p>
+            </div>
+
+            <button
+              className="form-close-button"
+              type="button"
+              onClick={resetForm}
+            >
+              ×
+            </button>
+          </div>
+
+          <form className="product-form" onSubmit={handleSubmit}>
+            <label>
+              Product Name
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Example: Wireless Mouse"
+                required
+              />
+            </label>
+
+            <label>
+              SKU / Barcode
+              <input
+                type="text"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
+                placeholder="Example: WM-001"
+                required
+              />
+            </label>
+
+            <label>
+              Category
+              <input
+                type="text"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                placeholder="Example: Electronics"
+                required
+              />
+            </label>
+
+            <label>
+              Unit Price (PKR)
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                min="1"
+                step="0.01"
+                required
+              />
+            </label>
+
+            <label>
+              Stock Quantity
+              <input
+                type="number"
+                name="stock_quantity"
+                value={formData.stock_quantity}
+                onChange={handleChange}
+                min="0"
+                required
+              />
+            </label>
+
+            <div className="product-form-actions">
+              <button className="primary-button" type="submit">
+                {editingId ? "Save Changes" : "Create Product"}
+              </button>
+
+              <button
+                className="outline-button"
+                type="button"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {message && <p className="checkout-message">{message}</p>}
       {error && <p className="error-message">{error}</p>}
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Product</th>
-              <th>SKU</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      <section className="products-table-card">
+        <div className="products-toolbar">
+          <div className="product-search-box">
+            <span>⌕</span>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by product, SKU, or category"
+            />
+          </div>
 
-          <tbody>
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td>{product.id}</td>
-                <td>{product.name}</td>
-                <td>{product.sku}</td>
-                <td>{product.category}</td>
-                <td>PKR {product.price}</td>
+          <select
+            value={stockFilter}
+            onChange={(event) => setStockFilter(event.target.value)}
+          >
+            <option value="all">All Stock</option>
+            <option value="available">In Stock</option>
+            <option value="low">Low Stock</option>
+          </select>
+        </div>
 
-                <td
-                  className={
-                    product.stock_quantity <= 5
-                      ? "stock-low"
-                      : "stock-ok"
-                  }
-                >
-                  {product.stock_quantity}
-                </td>
-
-                <td className="action-buttons">
-                  <button
-                    className="edit-button"
-                    type="button"
-                    onClick={() => startEdit(product)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="delete-button"
-                    type="button"
-                    onClick={() => handleDelete(product)}
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Unit Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
 
-      {loading && <p>Loading products...</p>}
+            <tbody>
+              {filteredProducts.map((product) => (
+                <tr key={product.id}>
+                  <td>
+                    <strong className="product-name-cell">{product.name}</strong>
+                  </td>
+                  <td>
+                    <span className="sku-badge">{product.sku}</span>
+                  </td>
+                  <td>{product.category}</td>
+                  <td>PKR {Number(product.price).toLocaleString()}</td>
+                  <td>{product.stock_quantity}</td>
+                  <td>
+                    <span
+                      className={
+                        product.stock_quantity <= 5
+                          ? "stock-status low"
+                          : "stock-status available"
+                      }
+                    >
+                      {product.stock_quantity <= 5 ? "Low stock" : "In stock"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="edit-button"
+                        type="button"
+                        onClick={() => startEdit(product)}
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        className="delete-button"
+                        type="button"
+                        onClick={() => handleDelete(product)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {!loading && filteredProducts.length === 0 && (
+                <tr>
+                  <td className="empty-table-cell" colSpan="7">
+                    No products found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {loading && <p className="table-loading">Loading products...</p>}
+      </section>
     </section>
   );
 }

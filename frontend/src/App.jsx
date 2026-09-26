@@ -4,7 +4,6 @@ import ProductsPage from "./components/ProductsPage";
 import CheckoutPage from "./components/CheckoutPage";
 import SalesPage from "./components/SalesPage";
 import FBRInvoicesPage from "./components/FBRInvoicesPage";
-
 import "./index.css";
 
 const API_URL =
@@ -15,7 +14,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [forecastData, setForecastData] = useState([]);
-
   const [dashboardData, setDashboardData] = useState({
     totalProducts: 0,
     lowStock: 0,
@@ -25,12 +23,12 @@ function App() {
   });
 
   const menuItems = [
-    "Dashboard",
-    "Products",
-    "Checkout",
-    "Sales",
-    "FBR Invoices",
-    "AI Forecast",
+    { name: "Dashboard", icon: "▦" },
+    { name: "Products", icon: "□" },
+    { name: "Checkout", icon: "⌁" },
+    { name: "Sales", icon: "↗" },
+    { name: "FBR Invoices", icon: "▤" },
+    { name: "AI Forecast", icon: "◈" },
   ];
 
   useEffect(() => {
@@ -78,19 +76,18 @@ function App() {
 
         setDashboardData({
           totalProducts: products.length,
-          lowStock: lowStock,
-          totalSales: totalSales,
+          lowStock,
+          totalSales,
           fbrStatus: latestFbrStatus,
-          backendStatus: "FastAPI Connected",
+          backendStatus: "System Online",
         });
 
         setForecastData(forecasts);
       } catch (err) {
         setError(err.message);
-
         setDashboardData((currentData) => ({
           ...currentData,
-          backendStatus: "Backend Connection Failed",
+          backendStatus: "Connection Failed",
         }));
       } finally {
         setLoading(false);
@@ -100,133 +97,212 @@ function App() {
     loadDashboardData();
   }, []);
 
+  function renderPageContent() {
+    if (page === "Products") {
+      return <ProductsPage />;
+    }
+
+    if (page === "Checkout") {
+      return <CheckoutPage />;
+    }
+
+    if (page === "Sales") {
+      return <SalesPage />;
+    }
+
+    if (page === "FBR Invoices") {
+      return <FBRInvoicesPage />;
+    }
+
+    if (page === "AI Forecast") {
+      return (
+        <section className="content-card forecast-page">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">SALES INTELLIGENCE</p>
+              <h3>Product Demand Forecast</h3>
+              <p>
+                Estimated next-day demand based on available POS sales history.
+              </p>
+            </div>
+          </div>
+
+          {forecastData.length === 0 ? (
+            <p className="empty-state">
+              No sales data is available for forecasting yet.
+            </p>
+          ) : (
+            <div className="forecast-list">
+              {forecastData.map((forecast) => (
+                <article className="forecast-item" key={forecast.product_id}>
+                  <div>
+                    <strong>{forecast.product_name}</strong>
+                    <small>Forecast based on available sales history</small>
+                  </div>
+
+                  <div className="forecast-demand">
+                    <span>Next-day demand</span>
+                    <b>{forecast.predicted_next_day_quantity} units</b>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    }
+
+    return (
+      <>
+        <section className="dashboard-hero">
+          <div>
+            <p className="eyebrow">POINT OF SALE OVERVIEW</p>
+            <h3>Welcome back to HUMAITEC POS</h3>
+            <p>
+              Manage products, process quick sales, review invoices, and monitor
+              stock from one workspace.
+            </p>
+          </div>
+
+          <button
+            className="primary-button hero-action"
+            onClick={() => setPage("Checkout")}
+          >
+            Start New Sale
+          </button>
+        </section>
+
+        <section className="dashboard-actions">
+          <button onClick={() => setPage("Products")}>
+            <span>□</span>
+            <div>
+              <strong>Products</strong>
+              <small>Manage inventory</small>
+            </div>
+          </button>
+
+          <button onClick={() => setPage("Checkout")}>
+            <span>⌁</span>
+            <div>
+              <strong>POS Checkout</strong>
+              <small>Create a sale</small>
+            </div>
+          </button>
+
+          <button onClick={() => setPage("FBR Invoices")}>
+            <span>▤</span>
+            <div>
+              <strong>FBR Invoices</strong>
+              <small>Review submissions</small>
+            </div>
+          </button>
+
+          <button onClick={() => setPage("AI Forecast")}>
+            <span>◈</span>
+            <div>
+              <strong>AI Forecast</strong>
+              <small>View demand estimate</small>
+            </div>
+          </button>
+        </section>
+      </>
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <h1>HUMAITEC POS</h1>
-        <p className="sidebar-subtitle">AI + FBR Integration</p>
+        <div className="brand">
+          <div className="brand-mark">H</div>
+          <div>
+            <h1>HUMAITEC</h1>
+            <p>POS & FBR SYSTEM</p>
+          </div>
+        </div>
+
+        <p className="sidebar-section-label">MAIN MENU</p>
 
         <nav>
           {menuItems.map((item) => (
             <button
-              key={item}
-              className={page === item ? "nav-item active" : "nav-item"}
-              onClick={() => setPage(item)}
+              key={item.name}
+              className={
+                page === item.name ? "nav-item active" : "nav-item"
+              }
+              onClick={() => setPage(item.name)}
             >
-              {item}
+              <span className="nav-icon">{item.icon}</span>
+              {item.name}
             </button>
           ))}
         </nav>
+
+        <div className="sidebar-footer">
+          <span className="online-dot" />
+          FastAPI connected
+        </div>
       </aside>
 
       <main className="main-content">
-        {/* <header className="topbar">
+        <header className="topbar">
           <div>
-            <p className="small-label">HUMAITEC</p>
+            <p className="small-label">HUMAITEC / OPERATIONS</p>
             <h2>{page}</h2>
           </div>
 
-          <span className="status-badge">
+          <div className="topbar-status">
+            <span
+              className={
+                dashboardData.backendStatus === "System Online"
+                  ? "online-dot"
+                  : "offline-dot"
+              }
+            />
             {dashboardData.backendStatus}
-          </span>
-        </header> */}
-        <header className="topbar">
-  <div>
-    <p className="small-label">HUMAITEC</p>
-    <h2>{page}</h2>
-  </div>
-</header>
+          </div>
+        </header>
 
         {error && <p className="error-message">{error}</p>}
 
-        <section className="metrics-grid">
-          <article className="metric-card">
-            <p>Total Products</p>
-            <h3>{loading ? "..." : dashboardData.totalProducts}</h3>
-          </article>
+        {page === "Dashboard" && (
+          <section className="metrics-grid">
+            <article className="metric-card">
+              <div className="metric-icon blue">□</div>
+              <p>Total Products</p>
+              <h3>{loading ? "..." : dashboardData.totalProducts}</h3>
+              <small>Available in inventory</small>
+            </article>
 
-          <article className="metric-card">
-            <p>Low Stock Products</p>
-            <h3>{loading ? "..." : dashboardData.lowStock}</h3>
-          </article>
+            <article className="metric-card">
+              <div className="metric-icon orange">!</div>
+              <p>Low Stock Items</p>
+              <h3>{loading ? "..." : dashboardData.lowStock}</h3>
+              <small>Need stock attention</small>
+            </article>
 
-          <article className="metric-card">
-            <p>Total Sales</p>
-            <h3>
-              {loading
-                ? "..."
-                : `PKR ${dashboardData.totalSales.toLocaleString()}`}
-            </h3>
-          </article>
+            <article className="metric-card">
+              <div className="metric-icon green">₨</div>
+              <p>Total Sales</p>
+              <h3>
+                {loading
+                  ? "..."
+                  : `PKR ${dashboardData.totalSales.toLocaleString()}`}
+              </h3>
+              <small>All recorded sales</small>
+            </article>
 
-          <article className="metric-card">
-            <p>FBR Status</p>
-            <h3 className="fbr-text">
-              {loading ? "..." : dashboardData.fbrStatus}
-            </h3>
-          </article>
-        </section>
-
-        {page === "Products" ? (
-          <ProductsPage />
-        ) : page === "Checkout" ? (
-          <CheckoutPage />
-        ) : page === "Sales" ? (
-          <SalesPage />
-        ) : page === "FBR Invoices" ? (
-          <FBRInvoicesPage />
-        ) : page === "AI Forecast" ? (
-          <section className="welcome-card">
-            <h3>AI Product Demand Forecast</h3>
-            <p>This prediction is calculated from your stored POS sales history.</p>
-
-            {forecastData.length === 0 ? (
-              <p>No sales data is available for forecasting yet.</p>
-            ) : (
-              <div className="forecast-list">
-                {forecastData.map((forecast) => (
-                  <div className="forecast-item" key={forecast.product_id}>
-                    <strong>{forecast.product_name}</strong>
-
-                    <span>
-                      Next-day demand:{" "}
-                      {forecast.predicted_next_day_quantity} units
-                    </span>
-
-                    <small>Forecast based on available sales history</small>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
-          <section className="welcome-card">
-            <h3>AI-Powered Point of Sale System</h3>
-
-            <p>
-              Manage inventory, create customer bills, submit Mock FBR invoices,
-              and forecast product demand from sales history.
-            </p>
-
-            <div className="feature-list">
-              <button onClick={() => setPage("Products")}>
-                Inventory Management
-              </button>
-
-              <button onClick={() => setPage("Checkout")}>
-                POS Checkout
-              </button>
-
-              <button onClick={() => setPage("FBR Invoices")}>
-                FBR Invoice Queue
-              </button>
-
-              <button onClick={() => setPage("AI Forecast")}>
-                AI Sales Forecasting
-              </button>
-            </div>
+            <article className="metric-card">
+              <div className="metric-icon purple">✓</div>
+              <p>FBR Status</p>
+              <h3 className="fbr-text">
+                {loading ? "..." : dashboardData.fbrStatus}
+              </h3>
+              <small>Latest invoice status</small>
+            </article>
           </section>
         )}
+
+        {renderPageContent()}
       </main>
     </div>
   );
