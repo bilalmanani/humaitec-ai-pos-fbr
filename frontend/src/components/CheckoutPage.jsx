@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import "./CheckoutPage.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
@@ -6,7 +7,6 @@ const API_URL =
 function CheckoutPage() {
   const [products, setProducts] = useState([]);
   const [searchValue, setSearchValue] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [cart, setCart] = useState([]);
   const [heldOrders, setHeldOrders] = useState([]);
@@ -15,6 +15,7 @@ function CheckoutPage() {
   const [cashTendered, setCashTendered] = useState("");
   const [message, setMessage] = useState("");
   const [receipt, setReceipt] = useState(null);
+  const [activeCategory, setActiveCategory] = useState("All");
 
   const barcodeInputRef = useRef(null);
   const quantityInputRef = useRef(null);
@@ -33,12 +34,6 @@ function CheckoutPage() {
       const activeProducts = data.filter((product) => product.is_active);
 
       setProducts(activeProducts);
-
-      if (activeProducts.length > 0) {
-        setSelectedProductId((currentId) =>
-          currentId ? currentId : String(activeProducts[0].id)
-        );
-      }
     } catch (error) {
       setMessage(error.message);
     }
@@ -113,7 +108,8 @@ function CheckoutPage() {
     return products.filter(
       (product) =>
         product.name.toLowerCase().includes(search) ||
-        product.sku.toLowerCase().includes(search)
+        product.sku.toLowerCase().includes(search) ||
+        product.category.toLowerCase().includes(search)
     );
   }, [products, searchValue]);
 
@@ -184,19 +180,6 @@ function CheckoutPage() {
     barcodeInputRef.current?.focus();
   }
 
-  function addSelectedProduct() {
-    const product = products.find(
-      (item) => item.id === Number(selectedProductId)
-    );
-
-    if (!product) {
-      setMessage("Please select a product.");
-      return;
-    }
-
-    addProductToCart(product);
-  }
-
   function handleBarcodeKeyDown(event) {
     if (event.key !== "Enter") {
       return;
@@ -254,14 +237,12 @@ function CheckoutPage() {
   }
 
   function clearBasket() {
-
     setCart([]);
     setDiscountPercentage(0);
     setCashTendered("");
     setReceipt(null);
     setMessage("Basket cleared.");
     barcodeInputRef.current?.focus();
-
   }
 
   async function holdCurrentOrder() {
@@ -294,8 +275,10 @@ function CheckoutPage() {
 
       setCart([]);
       setDiscountPercentage(0);
+      setCashTendered("");
       setSearchValue("");
       setMessage(`${data.hold_number} saved successfully.`);
+
       await loadHeldOrders();
       barcodeInputRef.current?.focus();
     } catch (error) {
@@ -351,9 +334,11 @@ function CheckoutPage() {
 
       setDiscountPercentage(heldOrder.discount_percentage);
       setPaymentMethod(heldOrder.payment_method);
+      setCashTendered("");
       setReceipt(null);
       setSearchValue("");
       setMessage(`${heldOrder.hold_number} resumed successfully.`);
+
       barcodeInputRef.current?.focus();
     } catch (error) {
       setMessage(error.message);
@@ -384,6 +369,7 @@ function CheckoutPage() {
       setMessage("Add at least one product to the basket.");
       return;
     }
+
     if (paymentMethod === "cash" && cashReceived < totalAmount) {
       setMessage(
         `Cash received must be at least PKR ${totalAmount.toLocaleString()}.`
@@ -414,97 +400,183 @@ function CheckoutPage() {
       if (!response.ok) {
         throw new Error(data.detail || "Could not complete sale.");
       }
-      setReceipt(data);
 
-      // setReceipt({
-      //   ...data,
-      //   cash_received: paymentMethod === "cash" ? cashReceived : null,
-      //   change_due: paymentMethod === "cash" ? changeDue : null,
-      // });
+      setReceipt(data);
       setCart([]);
       setDiscountPercentage(0);
       setCashTendered("");
       setSearchValue("");
       setMessage("Sale completed successfully.");
+
       await loadProducts();
       barcodeInputRef.current?.focus();
     } catch (error) {
       setMessage(error.message);
     }
   }
+  const categories = useMemo(() => {
+    return [
+      "All",
+      ...new Set(
+        products
+          .map((product) => product.category || "General")
+          .filter(Boolean)
+      ),
+    ];
+  }, [products]);
+
+  const visibleProducts = useMemo(() => {
+    if (activeCategory === "All") {
+      return filteredProducts;
+    }
+
+    return filteredProducts.filter(
+      (product) => (product.category || "General") === activeCategory
+    );
+  }, [filteredProducts, activeCategory]);
 
   return (
-    <section className="welcome-card">
-      <h3>POS Checkout</h3>
-
-      <p className="checkout-help">
-        F1: Product search | F2: Quantity | F3: Discount % | F4:
-        Checkout | ESC: Clear basket
-      </p>
-
-      <div className="checkout-grid">
+    <section className="odoo-pos-page">
+      <header className="odoo-pos-header">
         <div>
-          <label className="checkout-label">
-            Barcode / Product Search
-            <input
-              ref={barcodeInputRef}
-              className="barcode-input"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              onKeyDown={handleBarcodeKeyDown}
-              placeholder="Scan barcode, SKU, or type product name"
-            />
-          </label>
-
-          <label className="checkout-label">
-            Product
-            <select
-              value={selectedProductId}
-              onChange={(event) => setSelectedProductId(event.target.value)}
-            >
-              {filteredProducts.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name} — PKR {product.price} — Stock:{" "}
-                  {product.stock_quantity}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="checkout-label">
-            Quantity
-            <input
-              ref={quantityInputRef}
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(event) => setQuantity(event.target.value)}
-            />
-          </label>
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={addSelectedProduct}
-          >
-            Add to Basket
-          </button>
+          <p className="eyebrow">POINT OF SALE</p>
+          <h3>New Order</h3>
+          <p>Search products, create an order, then collect payment.</p>
         </div>
 
-        <div className="basket-panel">
-          <h4>Current Basket</h4>
+        <div className="odoo-shortcuts">
+          <button type="button" onClick={() => barcodeInputRef.current?.focus()}>
+            F1 Search
+          </button>
 
-          {cart.length === 0 ? (
-            <p className="empty-basket">No items added yet.</p>
-          ) : (
-            <div className="basket-list">
-              {cart.map((item) => (
-                <div className="basket-item" key={item.id}>
+          <button type="button" onClick={() => quantityInputRef.current?.focus()}>
+            F2 Qty
+          </button>
+
+          <button type="button" onClick={() => discountInputRef.current?.focus()}>
+            F3 Discount
+          </button>
+
+          <button type="button" onClick={() => checkoutButtonRef.current?.focus()}>
+            F4 Pay
+          </button>
+
+          <button type="button" onClick={clearBasket}>
+            ESC Clear
+          </button>
+        </div>
+      </header>
+
+      <div className="odoo-pos-workspace">
+        <section className="odoo-products-workspace">
+          <div className="odoo-search-area">
+            <div className="odoo-search-box">
+              <span>⌕</span>
+              <input
+                ref={barcodeInputRef}
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                onKeyDown={handleBarcodeKeyDown}
+                placeholder="Scan barcode, SKU, or search product"
+              />
+            </div>
+
+            <label className="odoo-qty-field">
+              <span>Quantity</span>
+              <input
+                ref={quantityInputRef}
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="odoo-category-bar">
+            {categories.map((category) => (
+              <button
+                type="button"
+                key={category}
+                className={
+                  activeCategory === category
+                    ? "odoo-category active"
+                    : "odoo-category"
+                }
+                onClick={() => setActiveCategory(category)}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          <div className="odoo-products-title">
+            <h4>Products</h4>
+            <span>{visibleProducts.length} products</span>
+          </div>
+
+          <div className="odoo-product-grid">
+            {visibleProducts.map((product) => (
+              <button
+                key={product.id}
+                type="button"
+                className="odoo-product-card"
+                disabled={product.stock_quantity <= 0}
+                onClick={() => addProductToCart(product)}
+              >
+                <span className="odoo-product-category">
+                  {product.category || "General"}
+                </span>
+
+                <strong>{product.name}</strong>
+                <small>{product.sku}</small>
+
+                <footer>
+                  <b>PKR {Number(product.price).toLocaleString()}</b>
+                  <span>Stock {product.stock_quantity}</span>
+                </footer>
+              </button>
+            ))}
+
+            {visibleProducts.length === 0 && (
+              <p className="odoo-empty-products">
+                No product found. Try another search or category.
+              </p>
+            )}
+          </div>
+        </section>
+
+        <aside className="odoo-order-panel">
+          <div className="odoo-order-header">
+            <div>
+              <h4>Current Order</h4>
+              <span>{cart.length} item(s)</span>
+            </div>
+
+            {cart.length > 0 && (
+              <button
+                type="button"
+                className="odoo-clear-order"
+                onClick={clearBasket}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          <div className="odoo-order-lines">
+            {cart.length === 0 ? (
+              <div className="odoo-empty-order">
+                <span>⌁</span>
+                <strong>No items in this order</strong>
+                <small>Select a product from the left side.</small>
+              </div>
+            ) : (
+              cart.map((item) => (
+                <article className="odoo-order-line" key={item.id}>
                   <div>
                     <strong>{item.name}</strong>
-                    <small>
-                      PKR {Number(item.price).toLocaleString()} each
-                    </small>
+                    <small>PKR {Number(item.price).toLocaleString()} each</small>
                   </div>
 
                   <input
@@ -516,56 +588,52 @@ function CheckoutPage() {
                     }
                   />
 
-                  <strong>
-                    PKR{" "}
-                    {(Number(item.price) * item.quantity).toLocaleString()}
-                  </strong>
+                  <b>
+                    PKR {(Number(item.price) * item.quantity).toLocaleString()}
+                  </b>
 
                   <button
                     type="button"
-                    className="delete-button"
                     onClick={() => removeFromCart(item.id)}
+                    title={`Remove ${item.name}`}
                   >
-                    Remove
+                    ×
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
+                </article>
+              ))
+            )}
+          </div>
 
-          <div className="checkout-summary">
-            <p>
+          <div className="odoo-order-summary">
+            <div className="odoo-summary-row">
               <span>Subtotal</span>
               <strong>PKR {subtotal.toLocaleString()}</strong>
-            </p>
+            </div>
 
-            <label className="checkout-label">
-              Discount Percentage
+            <label className="odoo-payment-field">
+              Discount percentage
               <input
                 ref={discountInputRef}
                 type="number"
                 min="0"
                 max="100"
                 value={discountPercentage}
-                onChange={(event) =>
-                  setDiscountPercentage(event.target.value)
-                }
-                placeholder="Example: 10 means 10% discount"
+                onChange={(event) => setDiscountPercentage(event.target.value)}
               />
             </label>
 
-            <p>
-              <span>Discount</span>
-              <strong>PKR {discountAmount.toLocaleString()}</strong>
-            </p>
+            <div className="odoo-summary-row discount">
+              <span>Discount ({safeDiscountPercentage}%)</span>
+              <strong>- PKR {discountAmount.toLocaleString()}</strong>
+            </div>
 
-            <p className="grand-total">
-              <span>Total Amount</span>
+            <div className="odoo-grand-total">
+              <span>Total</span>
               <strong>PKR {totalAmount.toLocaleString()}</strong>
-            </p>
+            </div>
 
-            <label className="checkout-label">
-              Payment Method
+            <label className="odoo-payment-field">
+              Payment method
               <select
                 value={paymentMethod}
                 onChange={(event) => setPaymentMethod(event.target.value)}
@@ -576,76 +644,69 @@ function CheckoutPage() {
                 <option value="jazzcash">JazzCash</option>
               </select>
             </label>
+
             {paymentMethod === "cash" && (
               <>
-                <label className="checkout-label">
-                  Cash Received
+                <label className="odoo-payment-field">
+                  Cash received
                   <input
                     type="number"
                     min="0"
                     value={cashTendered}
                     onChange={(event) => setCashTendered(event.target.value)}
-                    placeholder="Enter cash received from customer"
+                    placeholder="Enter amount received"
                   />
                 </label>
 
-                <p className="change-due">
-                  <span>Change Due</span>
+                <div className="odoo-change-row">
+                  <span>Change due</span>
                   <strong>PKR {changeDue.toLocaleString()}</strong>
-                </p>
+                </div>
               </>
             )}
           </div>
-        </div>
+
+          <form className="odoo-order-actions" onSubmit={completeSale}>
+            <button
+              ref={checkoutButtonRef}
+              className="odoo-pay-button"
+              type="submit"
+            >
+              Pay · PKR {totalAmount.toLocaleString()}
+            </button>
+
+            <button
+              className="odoo-hold-button"
+              type="button"
+              onClick={holdCurrentOrder}
+            >
+              Hold Order
+            </button>
+          </form>
+        </aside>
       </div>
 
-      <form className="checkout-form" onSubmit={completeSale}>
-        <div className="action-buttons">
-          <button
-            ref={checkoutButtonRef}
-            className="primary-button"
-            type="submit"
-          >
-            Complete Sale
-          </button>
-
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={holdCurrentOrder}
-          >
-            Hold Current Order
-          </button>
-
-          <button
-            className="delete-button"
-            type="button"
-            onClick={clearBasket}
-          >
-            Clear Basket
-          </button>
-        </div>
-      </form>
-
-      <section className="held-orders-panel">
-        <div className="held-orders-heading">
-          <h4>Held Orders</h4>
+      <section className="odoo-held-orders">
+        <div className="odoo-held-header">
+          <div>
+            <h4>Held Orders</h4>
+            <p>Saved orders waiting for the next customer or payment.</p>
+          </div>
           <span>{heldOrders.length}</span>
         </div>
 
         {heldOrders.length === 0 ? (
           <p className="empty-basket">No held orders available.</p>
         ) : (
-          <div className="held-orders-list">
+          <div className="odoo-held-list">
             {heldOrders.map((order) => {
               const orderTotal = order.items.reduce(
-                (total, item) =>
-                  total + Number(item.price) * item.quantity,
+                (total, item) => total + Number(item.price) * item.quantity,
                 0
               );
 
               return (
-                <div className="held-order-item" key={order.id}>
+                <article className="odoo-held-ticket" key={order.id}>
                   <div>
                     <strong>{order.hold_number}</strong>
                     <small>
@@ -654,7 +715,7 @@ function CheckoutPage() {
                     </small>
                   </div>
 
-                  <div className="held-order-actions">
+                  <div>
                     <button
                       className="primary-button"
                       type="button"
@@ -671,7 +732,7 @@ function CheckoutPage() {
                       Delete
                     </button>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
@@ -688,7 +749,6 @@ function CheckoutPage() {
             <p>
               <strong>Sale Number:</strong> {receipt.sale_number}
             </p>
-
             <p>
               <strong>Payment:</strong> {receipt.payment_method}
             </p>
@@ -704,18 +764,13 @@ function CheckoutPage() {
                   <th>Line Total</th>
                 </tr>
               </thead>
-
               <tbody>
                 {receipt.items.map((item) => (
                   <tr key={item.id}>
                     <td>{item.product_name}</td>
-                    <td>
-                      PKR {Number(item.unit_price).toLocaleString()}
-                    </td>
+                    <td>PKR {Number(item.unit_price).toLocaleString()}</td>
                     <td>{item.quantity}</td>
-                    <td>
-                      PKR {Number(item.line_total).toLocaleString()}
-                    </td>
+                    <td>PKR {Number(item.line_total).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -725,41 +780,18 @@ function CheckoutPage() {
           <div className="receipt-totals">
             <p>
               <span>Subtotal</span>
-              <strong>
-                PKR {Number(receipt.subtotal).toLocaleString()}
-              </strong>
+              <strong>PKR {Number(receipt.subtotal).toLocaleString()}</strong>
             </p>
-
             <p>
               <span>Discount</span>
-              <strong>
-                PKR {Number(receipt.discount).toLocaleString()}
-              </strong>
+              <strong>PKR {Number(receipt.discount).toLocaleString()}</strong>
             </p>
-
             <p className="receipt-grand-total">
               <span>Total Amount</span>
               <strong>
                 PKR {Number(receipt.total_amount).toLocaleString()}
               </strong>
             </p>
-            {receipt.payment_method === "cash" && (
-              <>
-                {/* <p>
-                  <span>Cash Received</span>
-                  <strong>
-                    PKR {Number(receipt.cash_received).toLocaleString()}
-                  </strong>
-                </p>
-
-                <p className="receipt-grand-total">
-                  <span>Change Due</span>
-                  <strong>
-                    PKR {Number(receipt.change_due).toLocaleString()}
-                  </strong>
-                </p> */}
-              </>
-            )}
           </div>
         </section>
       )}

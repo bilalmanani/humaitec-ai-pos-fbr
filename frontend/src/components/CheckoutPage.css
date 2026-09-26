@@ -1,0 +1,685 @@
+.odoo-pos-page {
+  display: grid;
+  gap: 18px;
+}
+
+.odoo-pos-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.odoo-pos-header h3 {
+  margin: 5px 0 6px;
+  color: #172b4d;
+  font-size: 26px;
+}
+
+.odoo-pos-header p:not(.eyebrow) {
+  margin: 0;
+  color: #718198;
+}
+
+.odoo-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* .odoo-shortcuts span {
+  border: 1px solid #dce5f0;
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+} */
+
+.odoo-shortcuts button {
+  border: 1px solid #dce5f0;
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.odoo-shortcuts button:hover {
+  border-color: #2f73df;
+  background: #e8f1ff;
+  color: #2469d8;
+}
+
+.odoo-pos-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(390px, 0.85fr);
+  align-items: start;
+  gap: 18px;
+}
+
+/* Product area */
+
+.odoo-products-workspace,
+.odoo-order-panel,
+.odoo-held-orders {
+  border: 1px solid #dce5f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 15px rgba(27, 50, 84, 0.05);
+}
+
+.odoo-products-workspace {
+  padding: 18px;
+  background: #f8fafc;
+}
+
+.odoo-search-area {
+  display: grid;
+  grid-template-columns: 1fr 100px;
+  gap: 10px;
+}
+
+.odoo-search-box {
+  display: flex;
+  align-items: center;
+  border: 2px solid #3277e6;
+  border-radius: 9px;
+  padding: 0 12px;
+  background: #ffffff;
+}
+
+.odoo-search-box span {
+  color: #3277e6;
+  font-size: 19px;
+}
+
+.odoo-search-box input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  padding: 13px 9px;
+  background: transparent;
+  color: #26364d;
+  font-size: 14px;
+}
+
+.odoo-qty-field,
+.odoo-payment-field {
+  display: grid;
+  gap: 6px;
+  color: #3c4f69;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.odoo-qty-field span {
+  color: #5b6d85;
+  font-size: 11px;
+}
+
+.odoo-qty-field input,
+.odoo-payment-field input,
+.odoo-payment-field select,
+.odoo-order-line input {
+  width: 100%;
+  border: 1px solid #cbd8e8;
+  border-radius: 7px;
+  padding: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #26364d;
+  font-size: 13px;
+}
+
+.odoo-qty-field input:focus,
+.odoo-payment-field input:focus,
+.odoo-payment-field select:focus,
+.odoo-order-line input:focus {
+  border-color: #3277e6;
+  box-shadow: 0 0 0 3px rgba(50, 119, 230, 0.12);
+}
+
+.odoo-category-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 18px 0;
+  padding-bottom: 3px;
+}
+
+.odoo-category {
+  flex: 0 0 auto;
+  border: 1px solid #d7e1ee;
+  border-radius: 7px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #526178;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.odoo-category:hover,
+.odoo-category.active {
+  border-color: #2f73df;
+  background: #e8f1ff;
+  color: #2469d8;
+}
+
+.odoo-products-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.odoo-products-title h4 {
+  margin: 0;
+  color: #263a56;
+  font-size: 16px;
+}
+
+.odoo-products-title span {
+  color: #718198;
+  font-size: 12px;
+}
+
+.odoo-product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(145px, 1fr));
+  gap: 11px;
+}
+
+.odoo-product-card {
+  display: flex;
+  min-height: 142px;
+  flex-direction: column;
+  border: 1px solid #dce5f0;
+  border-radius: 9px;
+  padding: 13px;
+  background: #ffffff;
+  color: #273a54;
+  text-align: left;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.odoo-product-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: #75a8f4;
+  box-shadow: 0 8px 16px rgba(43, 104, 216, 0.13);
+}
+
+.odoo-product-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.odoo-product-category {
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: #eef4ff;
+  color: #276be0;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.odoo-product-card strong {
+  color: #253850;
+  font-size: 14px;
+}
+
+.odoo-product-card small {
+  margin-top: 5px;
+  color: #8492a6;
+  font-size: 11px;
+}
+
+.odoo-product-card footer {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.odoo-product-card footer b {
+  color: #2469d8;
+  font-size: 12px;
+}
+
+.odoo-product-card footer span {
+  color: #718198;
+  font-size: 10px;
+}
+
+.odoo-empty-products {
+  grid-column: 1 / -1;
+  padding: 25px 0;
+  color: #7a899e;
+  text-align: center;
+}
+
+/* Current order */
+
+.odoo-order-panel {
+  overflow: hidden;
+}
+
+.odoo-order-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 18px;
+  border-bottom: 1px solid #e4ebf4;
+}
+
+.odoo-order-header h4 {
+  margin: 0 0 3px;
+  color: #1d304b;
+  font-size: 18px;
+}
+
+.odoo-order-header span {
+  color: #7c8ca2;
+  font-size: 12px;
+}
+
+.odoo-clear-order {
+  border: 0;
+  border-radius: 6px;
+  padding: 7px 9px;
+  background: #fff0ef;
+  color: #d64035;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.odoo-order-lines {
+  min-height: 145px;
+  max-height: 270px;
+  overflow-y: auto;
+  padding: 0 18px;
+}
+
+.odoo-empty-order {
+  display: grid;
+  min-height: 145px;
+  place-items: center;
+  gap: 5px;
+  color: #7b8aa0;
+  text-align: center;
+}
+
+.odoo-empty-order > span {
+  color: #75a8f4;
+  font-size: 27px;
+}
+
+.odoo-empty-order strong {
+  color: #526178;
+  font-size: 14px;
+}
+
+.odoo-empty-order small {
+  font-size: 12px;
+}
+
+.odoo-order-line {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) 55px 104px 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.odoo-order-line strong,
+.odoo-order-line small {
+  display: block;
+}
+
+.odoo-order-line strong {
+  color: #2a3c55;
+  font-size: 13px;
+}
+
+.odoo-order-line small {
+  margin-top: 3px;
+  color: #8492a6;
+  font-size: 11px;
+}
+
+.odoo-order-line input {
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.odoo-order-line > b {
+  color: #334863;
+  font-size: 12px;
+  text-align: right;
+}
+
+.odoo-order-line button {
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 6px;
+  background: #fff0ef;
+  color: #d64035;
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+}
+
+/* Payment */
+
+.odoo-order-summary {
+  padding: 16px 18px;
+  border-top: 1px solid #e4ebf4;
+  background: #fbfcfe;
+}
+
+.odoo-summary-row,
+.odoo-grand-total,
+.odoo-change-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.odoo-summary-row {
+  margin-bottom: 10px;
+  color: #65768e;
+  font-size: 13px;
+}
+
+.odoo-summary-row strong {
+  color: #34465f;
+}
+
+.odoo-summary-row.discount strong {
+  color: #d97706;
+}
+
+.odoo-payment-field {
+  margin: 11px 0;
+}
+
+.odoo-grand-total {
+  margin: 13px 0;
+  border-radius: 8px;
+  padding: 13px;
+  background: #e9f1ff;
+  color: #2469d8;
+}
+
+.odoo-grand-total strong {
+  font-size: 19px;
+}
+
+.odoo-change-row {
+  margin-top: 10px;
+  border: 1px solid #86efac;
+  border-radius: 7px;
+  padding: 11px;
+  background: #f0fdf4;
+  color: #16803c;
+  font-size: 13px;
+}
+
+.odoo-change-row strong {
+  font-size: 16px;
+}
+
+.odoo-order-actions {
+  display: grid;
+  grid-template-columns: 1fr 125px;
+  gap: 9px;
+  padding: 14px 18px 18px;
+  background: #ffffff;
+}
+
+.odoo-pay-button,
+.odoo-hold-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 12px;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.odoo-pay-button {
+  background: #2f73df;
+}
+
+.odoo-pay-button:hover {
+  background: #235fbd;
+}
+
+.odoo-hold-button {
+  background: #f59e0b;
+}
+
+.odoo-hold-button:hover {
+  background: #d97706;
+}
+
+/* Restaurant-style held order tickets */
+
+.odoo-held-orders {
+  padding: 18px;
+}
+
+.odoo-held-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.odoo-held-header h4 {
+  margin: 0;
+  color: #263a56;
+  font-size: 17px;
+}
+
+.odoo-held-header p {
+  margin: 4px 0 0;
+  color: #7a899e;
+  font-size: 12px;
+}
+
+.odoo-held-header > span {
+  min-width: 29px;
+  border-radius: 20px;
+  padding: 5px 9px;
+  background: #e8f1ff;
+  color: #2469d8;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.odoo-held-list {
+  display: grid;
+  gap: 9px;
+}
+
+.odoo-held-ticket {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #e1e8f2;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  padding: 13px;
+  background: #fffcf6;
+}
+
+.odoo-held-ticket small {
+  display: block;
+  margin-top: 4px;
+  color: #7e8da1;
+}
+
+.odoo-held-ticket > div:last-child {
+  display: flex;
+  gap: 8px;
+}
+
+.odoo-held-ticket .primary-button,
+.odoo-held-ticket .delete-button {
+  padding: 8px 12px;
+}
+
+/* Receipt */
+
+.receipt-card {
+  margin-top: 2px;
+  border-left: 4px solid #15803d;
+  border-radius: 10px;
+  padding: 20px;
+  background: #f0fdf4;
+}
+
+.receipt-card h3 {
+  margin-top: 0;
+}
+
+.receipt-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-bottom: 16px;
+}
+
+.receipt-details p {
+  margin: 0;
+}
+
+.receipt-table-wrapper {
+  overflow-x: auto;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.receipt-table th,
+.receipt-table td {
+  border: 1px solid #dbe5f5;
+  padding: 12px;
+  text-align: left;
+}
+
+.receipt-table th {
+  background: #e8f0ff;
+}
+
+.receipt-totals {
+  width: 100%;
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.receipt-totals p {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.receipt-totals p:last-child {
+  border-bottom: 0;
+}
+
+.receipt-totals span,
+.receipt-totals strong {
+  padding: 11px 14px;
+}
+
+.receipt-totals span {
+  background: #f8fafc;
+}
+
+.receipt-totals strong {
+  border-left: 1px solid #cbd5e1;
+  text-align: right;
+}
+
+.receipt-grand-total span,
+.receipt-grand-total strong {
+  background: #eaf7ee;
+  color: #15803d;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+@media (max-width: 1120px) {
+  .odoo-pos-workspace {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+
+  .odoo-product-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .odoo-pos-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .odoo-product-grid {
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .odoo-pos-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .odoo-shortcuts {
+    justify-content: flex-start;
+  }
+
+  .odoo-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .odoo-order-line {
+    grid-template-columns: minmax(80px, 1fr) 48px 75px 27px;
+    gap: 6px;
+  }
+
+  .odoo-order-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .odoo-held-ticket {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
