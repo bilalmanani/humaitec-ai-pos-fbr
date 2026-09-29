@@ -21,22 +21,20 @@
   color: #718198;
 }
 
+.eyebrow {
+  margin: 0;
+  color: #5979a6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .odoo-shortcuts {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 6px;
 }
-
-/* .odoo-shortcuts span {
-  border: 1px solid #dce5f0;
-  border-radius: 6px;
-  padding: 6px 9px;
-  background: #ffffff;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 700;
-} */
 
 .odoo-shortcuts button {
   border: 1px solid #dce5f0;
@@ -55,14 +53,13 @@
   color: #2469d8;
 }
 
+/* Desktop POS workspace: Order left, products right */
 .odoo-pos-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(390px, 0.85fr);
+  grid-template-columns: minmax(350px, 0.82fr) minmax(0, 1.48fr);
   align-items: start;
   gap: 18px;
 }
-
-/* Product area */
 
 .odoo-products-workspace,
 .odoo-order-panel,
@@ -73,11 +70,18 @@
   box-shadow: 0 4px 15px rgba(27, 50, 84, 0.05);
 }
 
+/* JSX has products first, so this moves the order panel to the left */
+.odoo-order-panel {
+  order: -1;
+  overflow: hidden;
+}
+
 .odoo-products-workspace {
   padding: 18px;
   background: #f8fafc;
 }
 
+/* Product search */
 .odoo-search-area {
   display: grid;
   grid-template-columns: 1fr 100px;
@@ -271,11 +275,6 @@
 }
 
 /* Current order */
-
-.odoo-order-panel {
-  overflow: hidden;
-}
-
 .odoo-order-header {
   display: flex;
   align-items: center;
@@ -385,7 +384,6 @@
 }
 
 /* Payment */
-
 .odoo-order-summary {
   padding: 16px 18px;
   border-top: 1px solid #e4ebf4;
@@ -478,8 +476,7 @@
   background: #d97706;
 }
 
-/* Restaurant-style held order tickets */
-
+/* Held orders */
 .odoo-held-orders {
   padding: 18px;
 }
@@ -547,8 +544,7 @@
   padding: 8px 12px;
 }
 
-/* Receipt */
-
+/* Sale receipt */
 .receipt-card {
   margin-top: 2px;
   border-left: 4px solid #15803d;
@@ -637,7 +633,7 @@
 
 @media (max-width: 1120px) {
   .odoo-pos-workspace {
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.2fr);
   }
 
   .odoo-product-grid {
@@ -648,6 +644,10 @@
 @media (max-width: 900px) {
   .odoo-pos-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .odoo-order-panel {
+    order: 0;
   }
 
   .odoo-product-grid {
@@ -663,6 +663,10 @@
 
   .odoo-shortcuts {
     justify-content: flex-start;
+  }
+
+  .odoo-search-area {
+    grid-template-columns: 1fr 82px;
   }
 
   .odoo-product-grid {
@@ -682,4 +686,13 @@
     align-items: flex-start;
     flex-direction: column;
   }
+}
+.odoo-product-image {
+  width: 100%;
+  height: 105px;
+  margin-bottom: 10px;
+  border: 1px solid #e1e8f2;
+  border-radius: 7px;
+  background: #f8fafc;
+  object-fit: cover;
 }

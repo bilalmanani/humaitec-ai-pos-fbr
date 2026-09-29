@@ -292,3 +292,136 @@
     width: 100%;
   }
 }
+.inventory-summary-icon.purple {
+  background: #f1eaff;
+  color: #7c3aed;
+}
+
+.variant-count-badge {
+  border-radius: 20px;
+  padding: 5px 9px;
+  background: #f1eaff;
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.variant-button {
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: #eef4ff;
+  color: #2563d8;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.variant-button:hover {
+  background: #dbeafe;
+}
+
+.variants-manager-card {
+  margin-top: 20px;
+  padding: 22px;
+  border: 1px solid #dce5f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 15px rgba(27, 50, 84, 0.05);
+}
+
+.variants-manager-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.variants-manager-heading h4 {
+  margin: 5px 0;
+  color: #172b4d;
+  font-size: 20px;
+}
+
+.variants-manager-heading p:not(.eyebrow) {
+  margin: 0;
+  color: #718198;
+}
+
+.variant-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid #dce5f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.variant-form label {
+  display: grid;
+  gap: 7px;
+  color: #3c4f69;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.variant-form input {
+  width: 100%;
+  border: 1px solid #cbd8e8;
+  border-radius: 7px;
+  padding: 10px;
+  outline: 0;
+  background: white;
+  color: #26364d;
+}
+
+.variant-form input:focus {
+  border-color: #3277e6;
+  box-shadow: 0 0 0 3px rgba(50, 119, 230, 0.12);
+}
+
+.variant-form .primary-button {
+  align-self: end;
+}
+
+@media (max-width: 900px) {
+  .variant-form {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .variant-form {
+    grid-template-columns: 1fr;
+  }
+}
+.product-name-with-image {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-table-image,
+.product-image-placeholder {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 8px;
+}
+
+.product-table-image {
+  border: 1px solid #dce5f0;
+  background: #ffffff;
+  object-fit: cover;
+}
+
+.product-image-placeholder {
+  display: grid;
+  place-items: center;
+  background: #e8f1ff;
+  color: #2469d8;
+  font-size: 15px;
+  font-weight: 800;
+}

@@ -4,6 +4,12 @@ import "./CheckoutPage.css";
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+function getProductPlaceholder(productName) {
+  return `https://placehold.co/400x240/e8f1ff/2469d8?text=${encodeURIComponent(
+    productName
+  )}`;
+}
+
 function CheckoutPage() {
   const [products, setProducts] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -31,9 +37,7 @@ function CheckoutPage() {
       }
 
       const data = await response.json();
-      const activeProducts = data.filter((product) => product.is_active);
-
-      setProducts(activeProducts);
+      setProducts(data.filter((product) => product.is_active));
     } catch (error) {
       setMessage(error.message);
     }
@@ -47,8 +51,7 @@ function CheckoutPage() {
         throw new Error("Could not load held orders.");
       }
 
-      const data = await response.json();
-      setHeldOrders(data);
+      setHeldOrders(await response.json());
     } catch (error) {
       setMessage(error.message);
     }
@@ -113,9 +116,32 @@ function CheckoutPage() {
     );
   }, [products, searchValue]);
 
+  const categories = useMemo(() => {
+    return [
+      "All",
+      ...new Set(
+        products
+          .map((product) => product.category || "General")
+          .filter(Boolean)
+      ),
+    ];
+  }, [products]);
+
+  const visibleProducts = useMemo(() => {
+    if (activeCategory === "All") {
+      return filteredProducts;
+    }
+
+    return filteredProducts.filter(
+      (product) =>
+        (product.category || "General") === activeCategory
+    );
+  }, [filteredProducts, activeCategory]);
+
   const subtotal = useMemo(() => {
     return cart.reduce(
-      (total, item) => total + Number(item.price) * item.quantity,
+      (total, item) =>
+        total + Number(item.price) * item.quantity,
       0
     );
   }, [cart]);
@@ -125,7 +151,9 @@ function CheckoutPage() {
     100
   );
 
-  const discountAmount = (subtotal * safeDiscountPercentage) / 100;
+  const discountAmount =
+    (subtotal * safeDiscountPercentage) / 100;
+
   const totalAmount = subtotal - discountAmount;
   const cashReceived = Number(cashTendered) || 0;
 
@@ -143,18 +171,25 @@ function CheckoutPage() {
     }
 
     if (requestedQuantity > product.stock_quantity) {
-      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
+      setMessage(
+        `Only ${product.stock_quantity} unit(s) available.`
+      );
       return;
     }
 
     setCart((currentCart) => {
-      const existingItem = currentCart.find((item) => item.id === product.id);
+      const existingItem = currentCart.find(
+        (item) => item.id === product.id
+      );
 
       if (existingItem) {
-        const newQuantity = existingItem.quantity + requestedQuantity;
+        const newQuantity =
+          existingItem.quantity + requestedQuantity;
 
         if (newQuantity > product.stock_quantity) {
-          setMessage(`Only ${product.stock_quantity} unit(s) available.`);
+          setMessage(
+            `Only ${product.stock_quantity} unit(s) available.`
+          );
           return currentCart;
         }
 
@@ -200,7 +235,9 @@ function CheckoutPage() {
     );
 
     if (!matchedProduct) {
-      setMessage("No product found for this barcode or search value.");
+      setMessage(
+        "No product found for this barcode or search value."
+      );
       return;
     }
 
@@ -214,10 +251,17 @@ function CheckoutPage() {
       return;
     }
 
-    const product = products.find((item) => item.id === productId);
+    const product = products.find(
+      (item) => item.id === productId
+    );
 
-    if (product && numericQuantity > product.stock_quantity) {
-      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
+    if (
+      product &&
+      numericQuantity > product.stock_quantity
+    ) {
+      setMessage(
+        `Only ${product.stock_quantity} unit(s) available.`
+      );
       return;
     }
 
@@ -247,7 +291,9 @@ function CheckoutPage() {
 
   async function holdCurrentOrder() {
     if (cart.length === 0) {
-      setMessage("Add at least one product before holding an order.");
+      setMessage(
+        "Add at least one product before holding an order."
+      );
       return;
     }
 
@@ -270,7 +316,9 @@ function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Could not hold the order.");
+        throw new Error(
+          data.detail || "Could not hold the order."
+        );
       }
 
       setCart([]);
@@ -297,7 +345,9 @@ function CheckoutPage() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.detail || "Could not delete held order.");
+      throw new Error(
+        data.detail || "Could not delete held order."
+      );
     }
 
     await loadHeldOrders();
@@ -337,7 +387,9 @@ function CheckoutPage() {
       setCashTendered("");
       setReceipt(null);
       setSearchValue("");
-      setMessage(`${heldOrder.hold_number} resumed successfully.`);
+      setMessage(
+        `${heldOrder.hold_number} resumed successfully.`
+      );
 
       barcodeInputRef.current?.focus();
     } catch (error) {
@@ -370,7 +422,10 @@ function CheckoutPage() {
       return;
     }
 
-    if (paymentMethod === "cash" && cashReceived < totalAmount) {
+    if (
+      paymentMethod === "cash" &&
+      cashReceived < totalAmount
+    ) {
       setMessage(
         `Cash received must be at least PKR ${totalAmount.toLocaleString()}.`
       );
@@ -380,25 +435,30 @@ function CheckoutPage() {
     try {
       setMessage("");
 
-      const response = await fetch(`${API_URL}/sales/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: cart.map((item) => ({
-            product_id: item.id,
-            quantity: item.quantity,
-          })),
-          payment_method: paymentMethod,
-          discount: discountAmount,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/sales/checkout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            items: cart.map((item) => ({
+              product_id: item.id,
+              quantity: item.quantity,
+            })),
+            payment_method: paymentMethod,
+            discount: discountAmount,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.detail || "Could not complete sale.");
+        throw new Error(
+          data.detail || "Could not complete sale."
+        );
       }
 
       setReceipt(data);
@@ -414,26 +474,6 @@ function CheckoutPage() {
       setMessage(error.message);
     }
   }
-  const categories = useMemo(() => {
-    return [
-      "All",
-      ...new Set(
-        products
-          .map((product) => product.category || "General")
-          .filter(Boolean)
-      ),
-    ];
-  }, [products]);
-
-  const visibleProducts = useMemo(() => {
-    if (activeCategory === "All") {
-      return filteredProducts;
-    }
-
-    return filteredProducts.filter(
-      (product) => (product.category || "General") === activeCategory
-    );
-  }, [filteredProducts, activeCategory]);
 
   return (
     <section className="odoo-pos-page">
@@ -441,23 +481,37 @@ function CheckoutPage() {
         <div>
           <p className="eyebrow">POINT OF SALE</p>
           <h3>New Order</h3>
-          <p>Search products, create an order, then collect payment.</p>
+          <p>
+            Search products, create an order, then collect payment.
+          </p>
         </div>
 
         <div className="odoo-shortcuts">
-          <button type="button" onClick={() => barcodeInputRef.current?.focus()}>
+          <button
+            type="button"
+            onClick={() => barcodeInputRef.current?.focus()}
+          >
             F1 Search
           </button>
 
-          <button type="button" onClick={() => quantityInputRef.current?.focus()}>
+          <button
+            type="button"
+            onClick={() => quantityInputRef.current?.focus()}
+          >
             F2 Qty
           </button>
 
-          <button type="button" onClick={() => discountInputRef.current?.focus()}>
+          <button
+            type="button"
+            onClick={() => discountInputRef.current?.focus()}
+          >
             F3 Discount
           </button>
 
-          <button type="button" onClick={() => checkoutButtonRef.current?.focus()}>
+          <button
+            type="button"
+            onClick={() => checkoutButtonRef.current?.focus()}
+          >
             F4 Pay
           </button>
 
@@ -472,10 +526,13 @@ function CheckoutPage() {
           <div className="odoo-search-area">
             <div className="odoo-search-box">
               <span>⌕</span>
+
               <input
                 ref={barcodeInputRef}
                 value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+                onChange={(event) =>
+                  setSearchValue(event.target.value)
+                }
                 onKeyDown={handleBarcodeKeyDown}
                 placeholder="Scan barcode, SKU, or search product"
               />
@@ -483,12 +540,15 @@ function CheckoutPage() {
 
             <label className="odoo-qty-field">
               <span>Quantity</span>
+
               <input
                 ref={quantityInputRef}
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={(event) => setQuantity(event.target.value)}
+                onChange={(event) =>
+                  setQuantity(event.target.value)
+                }
               />
             </label>
           </div>
@@ -524,6 +584,25 @@ function CheckoutPage() {
                 disabled={product.stock_quantity <= 0}
                 onClick={() => addProductToCart(product)}
               >
+                {product.image_url ? (
+                  <img
+                    className="odoo-product-image"
+                    src={product.image_url}
+                    alt={product.name}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src =
+                        getProductPlaceholder(product.name);
+                    }}
+                  />
+                ) : (
+                  <img
+                    className="odoo-product-image"
+                    src={getProductPlaceholder(product.name)}
+                    alt={product.name}
+                  />
+                )}
+
                 <span className="odoo-product-category">
                   {product.category || "General"}
                 </span>
@@ -532,7 +611,9 @@ function CheckoutPage() {
                 <small>{product.sku}</small>
 
                 <footer>
-                  <b>PKR {Number(product.price).toLocaleString()}</b>
+                  <b>
+                    PKR {Number(product.price).toLocaleString()}
+                  </b>
                   <span>Stock {product.stock_quantity}</span>
                 </footer>
               </button>
@@ -569,14 +650,18 @@ function CheckoutPage() {
               <div className="odoo-empty-order">
                 <span>⌁</span>
                 <strong>No items in this order</strong>
-                <small>Select a product from the left side.</small>
+                <small>
+                  Select a product from the right side.
+                </small>
               </div>
             ) : (
               cart.map((item) => (
                 <article className="odoo-order-line" key={item.id}>
                   <div>
                     <strong>{item.name}</strong>
-                    <small>PKR {Number(item.price).toLocaleString()} each</small>
+                    <small>
+                      PKR {Number(item.price).toLocaleString()} each
+                    </small>
                   </div>
 
                   <input
@@ -584,12 +669,18 @@ function CheckoutPage() {
                     min="1"
                     value={item.quantity}
                     onChange={(event) =>
-                      updateCartQuantity(item.id, event.target.value)
+                      updateCartQuantity(
+                        item.id,
+                        event.target.value
+                      )
                     }
                   />
 
                   <b>
-                    PKR {(Number(item.price) * item.quantity).toLocaleString()}
+                    PKR{" "}
+                    {(
+                      Number(item.price) * item.quantity
+                    ).toLocaleString()}
                   </b>
 
                   <button
@@ -612,19 +703,24 @@ function CheckoutPage() {
 
             <label className="odoo-payment-field">
               Discount percentage
+
               <input
                 ref={discountInputRef}
                 type="number"
                 min="0"
                 max="100"
                 value={discountPercentage}
-                onChange={(event) => setDiscountPercentage(event.target.value)}
+                onChange={(event) =>
+                  setDiscountPercentage(event.target.value)
+                }
               />
             </label>
 
             <div className="odoo-summary-row discount">
               <span>Discount ({safeDiscountPercentage}%)</span>
-              <strong>- PKR {discountAmount.toLocaleString()}</strong>
+              <strong>
+                - PKR {discountAmount.toLocaleString()}
+              </strong>
             </div>
 
             <div className="odoo-grand-total">
@@ -634,9 +730,12 @@ function CheckoutPage() {
 
             <label className="odoo-payment-field">
               Payment method
+
               <select
                 value={paymentMethod}
-                onChange={(event) => setPaymentMethod(event.target.value)}
+                onChange={(event) =>
+                  setPaymentMethod(event.target.value)
+                }
               >
                 <option value="cash">Cash</option>
                 <option value="card">Card</option>
@@ -649,11 +748,14 @@ function CheckoutPage() {
               <>
                 <label className="odoo-payment-field">
                   Cash received
+
                   <input
                     type="number"
                     min="0"
                     value={cashTendered}
-                    onChange={(event) => setCashTendered(event.target.value)}
+                    onChange={(event) =>
+                      setCashTendered(event.target.value)
+                    }
                     placeholder="Enter amount received"
                   />
                 </label>
@@ -666,7 +768,10 @@ function CheckoutPage() {
             )}
           </div>
 
-          <form className="odoo-order-actions" onSubmit={completeSale}>
+          <form
+            className="odoo-order-actions"
+            onSubmit={completeSale}
+          >
             <button
               ref={checkoutButtonRef}
               className="odoo-pay-button"
@@ -690,23 +795,32 @@ function CheckoutPage() {
         <div className="odoo-held-header">
           <div>
             <h4>Held Orders</h4>
-            <p>Saved orders waiting for the next customer or payment.</p>
+            <p>
+              Saved orders waiting for the next customer or payment.
+            </p>
           </div>
+
           <span>{heldOrders.length}</span>
         </div>
 
         {heldOrders.length === 0 ? (
-          <p className="empty-basket">No held orders available.</p>
+          <p className="empty-basket">
+            No held orders available.
+          </p>
         ) : (
           <div className="odoo-held-list">
             {heldOrders.map((order) => {
               const orderTotal = order.items.reduce(
-                (total, item) => total + Number(item.price) * item.quantity,
+                (total, item) =>
+                  total + Number(item.price) * item.quantity,
                 0
               );
 
               return (
-                <article className="odoo-held-ticket" key={order.id}>
+                <article
+                  className="odoo-held-ticket"
+                  key={order.id}
+                >
                   <div>
                     <strong>{order.hold_number}</strong>
                     <small>
@@ -727,7 +841,9 @@ function CheckoutPage() {
                     <button
                       className="delete-button"
                       type="button"
-                      onClick={() => handleDeleteHeldOrder(order.id)}
+                      onClick={() =>
+                        handleDeleteHeldOrder(order.id)
+                      }
                     >
                       Delete
                     </button>
@@ -749,6 +865,7 @@ function CheckoutPage() {
             <p>
               <strong>Sale Number:</strong> {receipt.sale_number}
             </p>
+
             <p>
               <strong>Payment:</strong> {receipt.payment_method}
             </p>
@@ -764,13 +881,18 @@ function CheckoutPage() {
                   <th>Line Total</th>
                 </tr>
               </thead>
+
               <tbody>
                 {receipt.items.map((item) => (
                   <tr key={item.id}>
                     <td>{item.product_name}</td>
-                    <td>PKR {Number(item.unit_price).toLocaleString()}</td>
+                    <td>
+                      PKR {Number(item.unit_price).toLocaleString()}
+                    </td>
                     <td>{item.quantity}</td>
-                    <td>PKR {Number(item.line_total).toLocaleString()}</td>
+                    <td>
+                      PKR {Number(item.line_total).toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -780,12 +902,18 @@ function CheckoutPage() {
           <div className="receipt-totals">
             <p>
               <span>Subtotal</span>
-              <strong>PKR {Number(receipt.subtotal).toLocaleString()}</strong>
+              <strong>
+                PKR {Number(receipt.subtotal).toLocaleString()}
+              </strong>
             </p>
+
             <p>
               <span>Discount</span>
-              <strong>PKR {Number(receipt.discount).toLocaleString()}</strong>
+              <strong>
+                PKR {Number(receipt.discount).toLocaleString()}
+              </strong>
             </p>
+
             <p className="receipt-grand-total">
               <span>Total Amount</span>
               <strong>
