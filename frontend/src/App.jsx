@@ -4,6 +4,7 @@ import ProductsPage from "./components/ProductsPage";
 import CheckoutPage from "./components/CheckoutPage";
 import SalesPage from "./components/SalesPage";
 import FBRInvoicesPage from "./components/FBRInvoicesPage";
+import ForecastPage from "./components/ForecastPage";
 import "./index.css";
 
 const API_URL =
@@ -114,43 +115,46 @@ function App() {
       return <FBRInvoicesPage />;
     }
 
+    // if (page === "AI Forecast") {
+    //   return (
+    //     <section className="content-card forecast-page">
+    //       <div className="section-heading">
+    //         <div>
+    //           <p className="eyebrow">SALES INTELLIGENCE</p>
+    //           <h3>Product Demand Forecast</h3>
+    //           <p>
+    //             Estimated next-day demand based on available POS sales history.
+    //           </p>
+    //         </div>
+    //       </div>
+
+    //       {forecastData.length === 0 ? (
+    //         <p className="empty-state">
+    //           No sales data is available for forecasting yet.
+    //         </p>
+    //       ) : (
+    //         <div className="forecast-list">
+    //           {forecastData.map((forecast) => (
+    //             <article className="forecast-item" key={forecast.product_id}>
+    //               <div>
+    //                 <strong>{forecast.product_name}</strong>
+    //                 <small>Forecast based on available sales history</small>
+    //               </div>
+
+    //               <div className="forecast-demand">
+    //                 <span>Next-day demand</span>
+    //                 <b>{forecast.predicted_next_day_quantity} units</b>
+    //               </div>
+    //             </article>
+    //           ))}
+    //         </div>
+    //       )}
+    //     </section>
+    //   );
+    // }
     if (page === "AI Forecast") {
-      return (
-        <section className="content-card forecast-page">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">SALES INTELLIGENCE</p>
-              <h3>Product Demand Forecast</h3>
-              <p>
-                Estimated next-day demand based on available POS sales history.
-              </p>
-            </div>
-          </div>
-
-          {forecastData.length === 0 ? (
-            <p className="empty-state">
-              No sales data is available for forecasting yet.
-            </p>
-          ) : (
-            <div className="forecast-list">
-              {forecastData.map((forecast) => (
-                <article className="forecast-item" key={forecast.product_id}>
-                  <div>
-                    <strong>{forecast.product_name}</strong>
-                    <small>Forecast based on available sales history</small>
-                  </div>
-
-                  <div className="forecast-demand">
-                    <span>Next-day demand</span>
-                    <b>{forecast.predicted_next_day_quantity} units</b>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
-      );
-    }
+  return <ForecastPage forecastData={forecastData} />;
+}
 
     return (
       <>
