@@ -14,6 +14,7 @@ from app.routes.fbr_invoices import router as fbr_router
 from app.routes.forecast import router as forecast_router
 from app.models.held_order import HeldOrder
 from app.routes.held_orders import router as held_orders_router
+from app.models.product import Product, ProductVariant
 
 
 Base.metadata.create_all(bind=engine)
