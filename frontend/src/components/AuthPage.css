@@ -1,0 +1,144 @@
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: #f4f7fb;
+}
+
+.auth-card {
+  width: min(100%, 430px);
+  border: 1px solid #dce5f0;
+  border-radius: 16px;
+  padding: 32px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(20, 33, 61, 0.12);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 30px;
+  color: #17315a;
+}
+
+.auth-brand > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 10px;
+  background: #3277e6;
+  color: white;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.auth-brand strong,
+.auth-brand small {
+  display: block;
+}
+
+.auth-brand small {
+  margin-top: 3px;
+  color: #6f82a1;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.auth-card h1 {
+  margin: 0;
+  color: #172b4d;
+  font-size: 27px;
+}
+
+.auth-card > p {
+  margin: 9px 0 24px;
+  color: #718198;
+  line-height: 1.5;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #dce5f0;
+}
+
+.auth-tabs button {
+  border: 0;
+  border-bottom: 3px solid transparent;
+  padding: 11px;
+  background: transparent;
+  color: #718198;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.auth-tabs button.active {
+  border-bottom-color: #3277e6;
+  color: #2469d8;
+}
+
+.auth-card form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 7px;
+  color: #34465f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-card input {
+  width: 100%;
+  border: 1px solid #cbd8e8;
+  border-radius: 8px;
+  padding: 12px;
+  outline: 0;
+  color: #26364d;
+  font: inherit;
+}
+
+.auth-card input:focus {
+  border-color: #3277e6;
+  box-shadow: 0 0 0 3px rgba(50, 119, 230, 0.12);
+}
+
+.auth-submit-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 13px;
+  background: #3277e6;
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.auth-submit-button:hover {
+  background: #2464ca;
+}
+
+.auth-submit-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.auth-success,
+.auth-error {
+  margin: 18px 0 0 !important;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.auth-success {
+  color: #15803d !important;
+}
+
+.auth-error {
+  color: #d92d20 !important;
+}

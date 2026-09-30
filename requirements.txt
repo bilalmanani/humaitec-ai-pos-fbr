@@ -32,3 +32,5 @@ uvicorn==0.52.4
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==17.1
+passlib==1.7.4
+python-jose[cryptography]==3.3.0

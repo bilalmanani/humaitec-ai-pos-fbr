@@ -5,16 +5,32 @@ import CheckoutPage from "./components/CheckoutPage";
 import SalesPage from "./components/SalesPage";
 import FBRInvoicesPage from "./components/FBRInvoicesPage";
 import ForecastPage from "./components/ForecastPage";
+import AuthPage from "./components/AuthPage";
+
 import "./index.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+
 function App() {
+  const [customer, setCustomer] = useState(() => {
+    try {
+      const savedCustomer = localStorage.getItem("customer");
+
+      return savedCustomer
+        ? JSON.parse(savedCustomer)
+        : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [page, setPage] = useState("Dashboard");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [forecastData, setForecastData] = useState([]);
+
   const [dashboardData, setDashboardData] = useState({
     totalProducts: 0,
     lowStock: 0,
@@ -33,8 +49,16 @@ function App() {
   ];
 
   useEffect(() => {
+    if (!customer) {
+      setLoading(false);
+      return;
+    }
+
     async function loadDashboardData() {
       try {
+        setLoading(true);
+        setError("");
+
         const [
           productsResponse,
           salesResponse,
@@ -62,7 +86,8 @@ function App() {
         const forecasts = await forecastResponse.json();
 
         const totalSales = sales.reduce(
-          (total, sale) => total + Number(sale.total_amount || 0),
+          (total, sale) =>
+            total + Number(sale.total_amount || 0),
           0
         );
 
@@ -86,6 +111,7 @@ function App() {
         setForecastData(forecasts);
       } catch (err) {
         setError(err.message);
+
         setDashboardData((currentData) => ({
           ...currentData,
           backendStatus: "Connection Failed",
@@ -96,7 +122,19 @@ function App() {
     }
 
     loadDashboardData();
-  }, []);
+  }, [customer]);
+
+  function handleAuthenticated(authenticatedCustomer) {
+    setCustomer(authenticatedCustomer);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("customer_token");
+    localStorage.removeItem("customer");
+
+    setCustomer(null);
+    setPage("Dashboard");
+  }
 
   function renderPageContent() {
     if (page === "Products") {
@@ -115,61 +153,29 @@ function App() {
       return <FBRInvoicesPage />;
     }
 
-    // if (page === "AI Forecast") {
-    //   return (
-    //     <section className="content-card forecast-page">
-    //       <div className="section-heading">
-    //         <div>
-    //           <p className="eyebrow">SALES INTELLIGENCE</p>
-    //           <h3>Product Demand Forecast</h3>
-    //           <p>
-    //             Estimated next-day demand based on available POS sales history.
-    //           </p>
-    //         </div>
-    //       </div>
-
-    //       {forecastData.length === 0 ? (
-    //         <p className="empty-state">
-    //           No sales data is available for forecasting yet.
-    //         </p>
-    //       ) : (
-    //         <div className="forecast-list">
-    //           {forecastData.map((forecast) => (
-    //             <article className="forecast-item" key={forecast.product_id}>
-    //               <div>
-    //                 <strong>{forecast.product_name}</strong>
-    //                 <small>Forecast based on available sales history</small>
-    //               </div>
-
-    //               <div className="forecast-demand">
-    //                 <span>Next-day demand</span>
-    //                 <b>{forecast.predicted_next_day_quantity} units</b>
-    //               </div>
-    //             </article>
-    //           ))}
-    //         </div>
-    //       )}
-    //     </section>
-    //   );
-    // }
     if (page === "AI Forecast") {
-  return <ForecastPage forecastData={forecastData} />;
-}
+      return <ForecastPage forecastData={forecastData} />;
+    }
 
     return (
       <>
         <section className="dashboard-hero">
           <div>
-            <p className="eyebrow">POINT OF SALE OVERVIEW</p>
+            <p className="eyebrow">
+              POINT OF SALE OVERVIEW
+            </p>
+
             <h3>Welcome back to HUMAITEC POS</h3>
+
             <p>
-              Manage products, process quick sales, review invoices, and monitor
-              stock from one workspace.
+              Manage products, process quick sales, review
+              invoices, and monitor stock from one workspace.
             </p>
           </div>
 
           <button
             className="primary-button hero-action"
+            type="button"
             onClick={() => setPage("Checkout")}
           >
             Start New Sale
@@ -177,32 +183,48 @@ function App() {
         </section>
 
         <section className="dashboard-actions">
-          <button onClick={() => setPage("Products")}>
+          <button
+            type="button"
+            onClick={() => setPage("Products")}
+          >
             <span>□</span>
+
             <div>
               <strong>Products</strong>
               <small>Manage inventory</small>
             </div>
           </button>
 
-          <button onClick={() => setPage("Checkout")}>
+          <button
+            type="button"
+            onClick={() => setPage("Checkout")}
+          >
             <span>⌁</span>
+
             <div>
               <strong>POS Checkout</strong>
               <small>Create a sale</small>
             </div>
           </button>
 
-          <button onClick={() => setPage("FBR Invoices")}>
+          <button
+            type="button"
+            onClick={() => setPage("FBR Invoices")}
+          >
             <span>▤</span>
+
             <div>
               <strong>FBR Invoices</strong>
               <small>Review submissions</small>
             </div>
           </button>
 
-          <button onClick={() => setPage("AI Forecast")}>
+          <button
+            type="button"
+            onClick={() => setPage("AI Forecast")}
+          >
             <span>◈</span>
+
             <div>
               <strong>AI Forecast</strong>
               <small>View demand estimate</small>
@@ -213,29 +235,46 @@ function App() {
     );
   }
 
+  if (!customer) {
+    return (
+      <AuthPage
+        onAuthenticated={handleAuthenticated}
+      />
+    );
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">H</div>
+
           <div>
             <h1>HUMAITEC</h1>
             <p>POS & FBR SYSTEM</p>
           </div>
         </div>
 
-        <p className="sidebar-section-label">MAIN MENU</p>
+        <p className="sidebar-section-label">
+          MAIN MENU
+        </p>
 
         <nav>
           {menuItems.map((item) => (
             <button
               key={item.name}
+              type="button"
               className={
-                page === item.name ? "nav-item active" : "nav-item"
+                page === item.name
+                  ? "nav-item active"
+                  : "nav-item"
               }
               onClick={() => setPage(item.name)}
             >
-              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-icon">
+                {item.icon}
+              </span>
+
               {item.name}
             </button>
           ))}
@@ -250,57 +289,92 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="small-label">HUMAITEC / OPERATIONS</p>
+            <p className="small-label">
+              HUMAITEC / OPERATIONS
+            </p>
+
             <h2>{page}</h2>
           </div>
 
-          <div className="topbar-status">
-            <span
-              className={
-                dashboardData.backendStatus === "System Online"
-                  ? "online-dot"
-                  : "offline-dot"
-              }
-            />
-            {dashboardData.backendStatus}
+          <div className="topbar-actions">
+            <div className="topbar-status">
+              <span
+                className={
+                  dashboardData.backendStatus ===
+                  "System Online"
+                    ? "online-dot"
+                    : "offline-dot"
+                }
+              />
+
+              {dashboardData.backendStatus}
+            </div>
+
+            <button
+              type="button"
+              className="logout-button"
+              onClick={handleLogout}
+            >
+              Sign Out
+            </button>
           </div>
         </header>
 
-        {error && <p className="error-message">{error}</p>}
+        {error && (
+          <p className="error-message">{error}</p>
+        )}
 
         {page === "Dashboard" && (
           <section className="metrics-grid">
             <article className="metric-card">
               <div className="metric-icon blue">□</div>
               <p>Total Products</p>
-              <h3>{loading ? "..." : dashboardData.totalProducts}</h3>
+
+              <h3>
+                {loading
+                  ? "..."
+                  : dashboardData.totalProducts}
+              </h3>
+
               <small>Available in inventory</small>
             </article>
 
             <article className="metric-card">
               <div className="metric-icon orange">!</div>
               <p>Low Stock Items</p>
-              <h3>{loading ? "..." : dashboardData.lowStock}</h3>
+
+              <h3>
+                {loading
+                  ? "..."
+                  : dashboardData.lowStock}
+              </h3>
+
               <small>Need stock attention</small>
             </article>
 
             <article className="metric-card">
               <div className="metric-icon green">₨</div>
               <p>Total Sales</p>
+
               <h3>
                 {loading
                   ? "..."
                   : `PKR ${dashboardData.totalSales.toLocaleString()}`}
               </h3>
+
               <small>All recorded sales</small>
             </article>
 
             <article className="metric-card">
               <div className="metric-icon purple">✓</div>
               <p>FBR Status</p>
+
               <h3 className="fbr-text">
-                {loading ? "..." : dashboardData.fbrStatus}
+                {loading
+                  ? "..."
+                  : dashboardData.fbrStatus}
               </h3>
+
               <small>Latest invoice status</small>
             </article>
           </section>

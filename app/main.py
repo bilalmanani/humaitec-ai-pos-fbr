@@ -15,6 +15,8 @@ from app.routes.forecast import router as forecast_router
 from app.models.held_order import HeldOrder
 from app.routes.held_orders import router as held_orders_router
 from app.models.product import Product, ProductVariant
+from app.models.customer import Customer
+from app.routes.auth import router as auth_router
 
 
 Base.metadata.create_all(bind=engine)
@@ -46,6 +48,7 @@ app.include_router(sales_router)
 app.include_router(held_orders_router)
 app.include_router(fbr_router)
 app.include_router(forecast_router)
+app.include_router(auth_router)
 # app.include_router(products_router)
 # app.include_router(sales_router)
 # app.include_router(fbr_router)

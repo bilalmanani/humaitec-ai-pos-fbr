@@ -911,3 +911,29 @@ button {
     text-align: left;
   }
 }
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logout-button {
+  border: 1px solid #f4b4af;
+  border-radius: 7px;
+  padding: 8px 12px;
+  background: #fff5f4;
+  color: #c93429;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.logout-button:hover {
+  background: #ffe5e2;
+}
+
+@media (max-width: 600px) {
+  .topbar-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
