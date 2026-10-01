@@ -21,7 +21,10 @@ router = APIRouter(
     response_model=SaleReceipt,
     status_code=status.HTTP_201_CREATED,
 )
-def checkout(data: CheckoutRequest, db: Session = Depends(get_db)):
+def checkout(
+    data: CheckoutRequest,
+    db: Session = Depends(get_db),
+):
     subtotal = 0.0
     sale_items_data = []
 
@@ -55,25 +58,51 @@ def checkout(data: CheckoutRequest, db: Session = Depends(get_db)):
             }
         )
 
-    # This must be after the loop.
-    # Now subtotal contains the amount for all items in the basket.
     if data.discount > subtotal:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Discount cannot be greater than the subtotal.",
         )
 
-    total_amount = subtotal - data.discount
+    taxable_amount = subtotal - data.discount
+
+    payment_method = data.payment_method.strip().lower()
+
+    if payment_method == "cash":
+      tax_rate = 5.0
+    elif payment_method in { 
+    "card",
+    "credit_card",
+    "debit_card",
+    "easypaisa",
+    "jazzcash",
+}:
+     tax_rate = 15.0
+    else:
+     tax_rate = 0.0
+
+    tax_amount = round(
+        taxable_amount * (tax_rate / 100),
+        2,
+    )
+
+    total_amount = round(
+        taxable_amount + tax_amount,
+        2,
+    )
 
     sale_number = (
-        f"POS-{datetime.now():%Y%m%d}-{uuid4().hex[:6].upper()}"
+        f"POS-{datetime.now():%Y%m%d}-"
+        f"{uuid4().hex[:6].upper()}"
     )
 
     sale = Sale(
         sale_number=sale_number,
-        payment_method=data.payment_method,
+        payment_method=payment_method,
         subtotal=subtotal,
         discount=data.discount,
+        tax_rate=tax_rate,
+        tax_amount=tax_amount,
         total_amount=total_amount,
     )
 
@@ -110,8 +139,13 @@ def checkout(data: CheckoutRequest, db: Session = Depends(get_db)):
     return sale
 
 
-@router.get("/", response_model=list[SaleReceipt])
-def list_sales(db: Session = Depends(get_db)):
+@router.get(
+    "/",
+    response_model=list[SaleReceipt],
+)
+def list_sales(
+    db: Session = Depends(get_db),
+):
     return (
         db.query(Sale)
         .options(selectinload(Sale.items))

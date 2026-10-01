@@ -14,6 +14,17 @@ class Sale(Base):
     payment_method: Mapped[str] = mapped_column(String(30), default="cash")
     subtotal: Mapped[float] = mapped_column(Float, default=0)
     discount: Mapped[float] = mapped_column(Float, default=0)
+    tax_rate: Mapped[float] = mapped_column(
+    Float,
+    default=0.0,
+    nullable=False,
+)
+
+    tax_amount: Mapped[float] = mapped_column(
+    Float,
+    default=0.0,
+    nullable=False,
+)
     total_amount: Mapped[float] = mapped_column(Float, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

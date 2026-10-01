@@ -10,6 +10,24 @@ function getProductPlaceholder(productName) {
   )}`;
 }
 
+function getTaxRate(paymentMethod) {
+  if (paymentMethod === "cash") {
+    return 5;
+  }
+
+  if (
+    paymentMethod === "card" ||
+    paymentMethod === "credit_card" ||
+    paymentMethod === "debit_card" ||
+    paymentMethod === "easypaisa" ||
+    paymentMethod === "jazzcash"
+  ) {
+    return 15;
+  }
+
+  return 0;
+}
+
 function CheckoutPage() {
   const [products, setProducts] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -133,15 +151,13 @@ function CheckoutPage() {
     }
 
     return filteredProducts.filter(
-      (product) =>
-        (product.category || "General") === activeCategory
+      (product) => (product.category || "General") === activeCategory
     );
   }, [filteredProducts, activeCategory]);
 
   const subtotal = useMemo(() => {
     return cart.reduce(
-      (total, item) =>
-        total + Number(item.price) * item.quantity,
+      (total, item) => total + Number(item.price) * item.quantity,
       0
     );
   }, [cart]);
@@ -151,14 +167,27 @@ function CheckoutPage() {
     100
   );
 
-  const discountAmount =
-    (subtotal * safeDiscountPercentage) / 100;
+  const discountAmount = Number(
+    ((subtotal * safeDiscountPercentage) / 100).toFixed(2)
+  );
 
-  const totalAmount = subtotal - discountAmount;
+  const taxableAmount = Math.max(0, subtotal - discountAmount);
+  const taxRate = getTaxRate(paymentMethod);
+
+  const taxAmount = Number(
+    (taxableAmount * (taxRate / 100)).toFixed(2)
+  );
+
+  const totalAmount = Number(
+    (taxableAmount + taxAmount).toFixed(2)
+  );
+
   const cashReceived = Number(cashTendered) || 0;
 
   const changeDue =
-    paymentMethod === "cash" && cashReceived > totalAmount
+    paymentMethod === "cash" &&
+      cashTendered.trim() !== "" &&
+      cashReceived > totalAmount
       ? cashReceived - totalAmount
       : 0;
 
@@ -171,9 +200,7 @@ function CheckoutPage() {
     }
 
     if (requestedQuantity > product.stock_quantity) {
-      setMessage(
-        `Only ${product.stock_quantity} unit(s) available.`
-      );
+      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
       return;
     }
 
@@ -183,13 +210,10 @@ function CheckoutPage() {
       );
 
       if (existingItem) {
-        const newQuantity =
-          existingItem.quantity + requestedQuantity;
+        const newQuantity = existingItem.quantity + requestedQuantity;
 
         if (newQuantity > product.stock_quantity) {
-          setMessage(
-            `Only ${product.stock_quantity} unit(s) available.`
-          );
+          setMessage(`Only ${product.stock_quantity} unit(s) available.`);
           return currentCart;
         }
 
@@ -235,9 +259,7 @@ function CheckoutPage() {
     );
 
     if (!matchedProduct) {
-      setMessage(
-        "No product found for this barcode or search value."
-      );
+      setMessage("No product found for this barcode or search value.");
       return;
     }
 
@@ -251,17 +273,10 @@ function CheckoutPage() {
       return;
     }
 
-    const product = products.find(
-      (item) => item.id === productId
-    );
+    const product = products.find((item) => item.id === productId);
 
-    if (
-      product &&
-      numericQuantity > product.stock_quantity
-    ) {
-      setMessage(
-        `Only ${product.stock_quantity} unit(s) available.`
-      );
+    if (product && numericQuantity > product.stock_quantity) {
+      setMessage(`Only ${product.stock_quantity} unit(s) available.`);
       return;
     }
 
@@ -291,9 +306,7 @@ function CheckoutPage() {
 
   async function holdCurrentOrder() {
     if (cart.length === 0) {
-      setMessage(
-        "Add at least one product before holding an order."
-      );
+      setMessage("Add at least one product before holding an order.");
       return;
     }
 
@@ -316,9 +329,7 @@ function CheckoutPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.detail || "Could not hold the order."
-        );
+        throw new Error(data.detail || "Could not hold the order.");
       }
 
       setCart([]);
@@ -345,9 +356,7 @@ function CheckoutPage() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        data.detail || "Could not delete held order."
-      );
+      throw new Error(data.detail || "Could not delete held order.");
     }
 
     await loadHeldOrders();
@@ -387,9 +396,7 @@ function CheckoutPage() {
       setCashTendered("");
       setReceipt(null);
       setSearchValue("");
-      setMessage(
-        `${heldOrder.hold_number} resumed successfully.`
-      );
+      setMessage(`${heldOrder.hold_number} resumed successfully.`);
 
       barcodeInputRef.current?.focus();
     } catch (error) {
@@ -422,9 +429,12 @@ function CheckoutPage() {
       return;
     }
 
+    const cashReceivedWasEntered = cashTendered.trim() !== "";
+
     if (
       paymentMethod === "cash" &&
-      cashReceived < totalAmount
+      cashReceivedWasEntered &&
+      Number(cashTendered) < totalAmount
     ) {
       setMessage(
         `Cash received must be at least PKR ${totalAmount.toLocaleString()}.`
@@ -435,30 +445,25 @@ function CheckoutPage() {
     try {
       setMessage("");
 
-      const response = await fetch(
-        `${API_URL}/sales/checkout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            items: cart.map((item) => ({
-              product_id: item.id,
-              quantity: item.quantity,
-            })),
-            payment_method: paymentMethod,
-            discount: discountAmount,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/sales/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            product_id: item.id,
+            quantity: item.quantity,
+          })),
+          payment_method: paymentMethod,
+          discount: discountAmount,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.detail || "Could not complete sale."
-        );
+        throw new Error(data.detail || "Could not complete sale.");
       }
 
       setReceipt(data);
@@ -481,9 +486,7 @@ function CheckoutPage() {
         <div>
           <p className="eyebrow">POINT OF SALE</p>
           <h3>New Order</h3>
-          <p>
-            Search products, create an order, then collect payment.
-          </p>
+          <p>Search products, create an order, then collect payment.</p>
         </div>
 
         <div className="odoo-shortcuts">
@@ -530,9 +533,7 @@ function CheckoutPage() {
               <input
                 ref={barcodeInputRef}
                 value={searchValue}
-                onChange={(event) =>
-                  setSearchValue(event.target.value)
-                }
+                onChange={(event) => setSearchValue(event.target.value)}
                 onKeyDown={handleBarcodeKeyDown}
                 placeholder="Scan barcode, SKU, or search product"
               />
@@ -546,9 +547,7 @@ function CheckoutPage() {
                 type="number"
                 min="1"
                 value={quantity}
-                onChange={(event) =>
-                  setQuantity(event.target.value)
-                }
+                onChange={(event) => setQuantity(event.target.value)}
               />
             </label>
           </div>
@@ -584,24 +583,20 @@ function CheckoutPage() {
                 disabled={product.stock_quantity <= 0}
                 onClick={() => addProductToCart(product)}
               >
-                {product.image_url ? (
-                  <img
-                    className="odoo-product-image"
-                    src={product.image_url}
-                    alt={product.name}
-                    onError={(event) => {
-                      event.currentTarget.onerror = null;
-                      event.currentTarget.src =
-                        getProductPlaceholder(product.name);
-                    }}
-                  />
-                ) : (
-                  <img
-                    className="odoo-product-image"
-                    src={getProductPlaceholder(product.name)}
-                    alt={product.name}
-                  />
-                )}
+                <img
+                  className="odoo-product-image"
+                  src={
+                    product.image_url ||
+                    getProductPlaceholder(product.name)
+                  }
+                  alt={product.name}
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = getProductPlaceholder(
+                      product.name
+                    );
+                  }}
+                />
 
                 <span className="odoo-product-category">
                   {product.category || "General"}
@@ -650,9 +645,7 @@ function CheckoutPage() {
               <div className="odoo-empty-order">
                 <span>⌁</span>
                 <strong>No items in this order</strong>
-                <small>
-                  Select a product from the right side.
-                </small>
+                <small>Select a product from the right side.</small>
               </div>
             ) : (
               cart.map((item) => (
@@ -669,10 +662,7 @@ function CheckoutPage() {
                     min="1"
                     value={item.quantity}
                     onChange={(event) =>
-                      updateCartQuantity(
-                        item.id,
-                        event.target.value
-                      )
+                      updateCartQuantity(item.id, event.target.value)
                     }
                   />
 
@@ -718,9 +708,12 @@ function CheckoutPage() {
 
             <div className="odoo-summary-row discount">
               <span>Discount ({safeDiscountPercentage}%)</span>
-              <strong>
-                - PKR {discountAmount.toLocaleString()}
-              </strong>
+              <strong>- PKR {discountAmount.toLocaleString()}</strong>
+            </div>
+
+            <div className="odoo-summary-row">
+              <span>Tax ({taxRate}%)</span>
+              <strong>+ PKR {taxAmount.toLocaleString()}</strong>
             </div>
 
             <div className="odoo-grand-total">
@@ -737,17 +730,17 @@ function CheckoutPage() {
                   setPaymentMethod(event.target.value)
                 }
               >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="easypaisa">EasyPaisa</option>
-                <option value="jazzcash">JazzCash</option>
+                <option value="cash">Cash — 5% Tax</option>
+                <option value="card">Card — 15% Tax</option>
+                <option value="easypaisa">EasyPaisa — 15% Tax</option>
+                <option value="jazzcash">JazzCash — 15% Tax</option>
               </select>
             </label>
 
             {paymentMethod === "cash" && (
               <>
                 <label className="odoo-payment-field">
-                  Cash received
+                  Cash received (optional)
 
                   <input
                     type="number"
@@ -768,10 +761,7 @@ function CheckoutPage() {
             )}
           </div>
 
-          <form
-            className="odoo-order-actions"
-            onSubmit={completeSale}
-          >
+          <form className="odoo-order-actions" onSubmit={completeSale}>
             <button
               ref={checkoutButtonRef}
               className="odoo-pay-button"
@@ -795,26 +785,36 @@ function CheckoutPage() {
         <div className="odoo-held-header">
           <div>
             <h4>Held Orders</h4>
-            <p>
-              Saved orders waiting for the next customer or payment.
-            </p>
+            <p>Saved orders waiting for the next customer or payment.</p>
           </div>
 
           <span>{heldOrders.length}</span>
         </div>
 
         {heldOrders.length === 0 ? (
-          <p className="empty-basket">
-            No held orders available.
-          </p>
+          <p className="empty-basket">No held orders available.</p>
         ) : (
           <div className="odoo-held-list">
             {heldOrders.map((order) => {
-              const orderTotal = order.items.reduce(
+              const orderSubtotal = order.items.reduce(
                 (total, item) =>
                   total + Number(item.price) * item.quantity,
                 0
               );
+
+              const orderDiscount =
+                (orderSubtotal *
+                  Number(order.discount_percentage || 0)) /
+                100;
+
+              const orderTaxableAmount =
+                orderSubtotal - orderDiscount;
+
+              const orderTax =
+                orderTaxableAmount *
+                (getTaxRate(order.payment_method) / 100);
+
+              const orderTotal = orderTaxableAmount + orderTax;
 
               return (
                 <article
@@ -887,11 +887,13 @@ function CheckoutPage() {
                   <tr key={item.id}>
                     <td>{item.product_name}</td>
                     <td>
-                      PKR {Number(item.unit_price).toLocaleString()}
+                      PKR{" "}
+                      {Number(item.unit_price).toLocaleString()}
                     </td>
                     <td>{item.quantity}</td>
                     <td>
-                      PKR {Number(item.line_total).toLocaleString()}
+                      PKR{" "}
+                      {Number(item.line_total).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -911,6 +913,15 @@ function CheckoutPage() {
               <span>Discount</span>
               <strong>
                 PKR {Number(receipt.discount).toLocaleString()}
+              </strong>
+            </p>
+
+            <p>
+              <span>
+                Tax ({Number(receipt.tax_rate || 0)}%)
+              </span>
+              <strong>
+                PKR {Number(receipt.tax_amount || 0).toLocaleString()}
               </strong>
             </p>
 
