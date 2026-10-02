@@ -292,12 +292,12 @@ function App() {
         <div className="sidebar-user">
           <strong>{customer.full_name}</strong>
           <small>
-            {isAdmin ? "ADMIN ACCOUNT" : "CASHIER TERMINAL"}
+            {isAdmin ? "ADMIN ACCOUNT" : "USER TERMINAL"}
           </small>
         </div>
 
         <p className="sidebar-section-label">
-          {isAdmin ? "ADMIN MENU" : "CASHIER MENU"}
+          {isAdmin ? "ADMIN MENU" : "USER MENU"}
         </p>
 
         <nav>
@@ -320,7 +320,7 @@ function App() {
 
         <div className="sidebar-footer">
           <span className="online-dot" />
-          {isAdmin ? "Admin access" : "Cashier access"}
+          {isAdmin ? "Admin access" : "User access"}
         </div>
       </aside>
 
@@ -422,3 +422,4 @@ function App() {
 }
 
 export default App;
+

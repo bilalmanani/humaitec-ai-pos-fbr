@@ -63,16 +63,13 @@ function AuthPage({ onAuthenticated }) {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `${API_URL}${endpoint}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       const data = await response.json();
 
@@ -98,14 +95,6 @@ function AuthPage({ onAuthenticated }) {
         return;
       }
 
-      /*
-        Backend returns:
-        {
-          access_token: "...",
-          token_type: "bearer",
-          user: { id, full_name, email, role, ... }
-        }
-      */
       localStorage.setItem(
         "customer_token",
         data.access_token
@@ -139,13 +128,13 @@ function AuthPage({ onAuthenticated }) {
         <h1>
           {mode === "login"
             ? "Welcome back"
-            : "Create cashier account"}
+            : "Create user account"}
         </h1>
 
         <p>
           {mode === "login"
             ? "Sign in to continue to HUMAITEC."
-            : "New accounts are created with cashier access."}
+            : "New accounts are created with user access."}
         </p>
 
         <div className="auth-tabs">
@@ -235,7 +224,7 @@ function AuthPage({ onAuthenticated }) {
               ? "Please wait..."
               : mode === "login"
                 ? "Sign In"
-                : "Create Cashier Account"}
+                : "Create User Account"}
           </button>
         </form>
 
