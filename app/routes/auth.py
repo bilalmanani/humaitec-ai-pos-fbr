@@ -18,7 +18,7 @@ from app.security import (
 
 router = APIRouter(
     prefix="/auth",
-    tags=["Customer Authentication"],
+    tags=["Authentication"],
 )
 
 
@@ -28,10 +28,10 @@ router = APIRouter(
     status_code=status.HTTP_201_CREATED,
 )
 def signup(
-    customer_data: CustomerSignup,
+    data: CustomerSignup,
     db: Session = Depends(get_db),
 ):
-    email = customer_data.email.strip().lower()
+    email = data.email.lower().strip()
 
     existing_customer = (
         db.query(Customer)
@@ -46,9 +46,10 @@ def signup(
         )
 
     customer = Customer(
-        full_name=customer_data.full_name.strip(),
+        full_name=data.full_name.strip(),
         email=email,
-        password_hash=hash_password(customer_data.password),
+        password_hash=hash_password(data.password),
+        role="cashier",
     )
 
     db.add(customer)
@@ -63,10 +64,10 @@ def signup(
     response_model=TokenResponse,
 )
 def login(
-    login_data: CustomerLogin,
+    data: CustomerLogin,
     db: Session = Depends(get_db),
 ):
-    email = login_data.email.strip().lower()
+    email = data.email.lower().strip()
 
     customer = (
         db.query(Customer)
@@ -74,23 +75,31 @@ def login(
         .first()
     )
 
-    if (
-        not customer
-        or not customer.is_active
-        or not verify_password(
-            login_data.password,
-            customer.password_hash,
-        )
+    if not customer or not verify_password(
+        data.password,
+        customer.password_hash,
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
         )
 
-    token = create_access_token(customer.id)
+    if not customer.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account is inactive.",
+        )
+
+    access_token = create_access_token(
+        {
+            "sub": str(customer.id),
+            "email": customer.email,
+            "role": customer.role,
+        }
+    )
 
     return {
-        "access_token": token,
+        "access_token": access_token,
         "token_type": "bearer",
-        "customer": customer,
+        "user": customer,
     }

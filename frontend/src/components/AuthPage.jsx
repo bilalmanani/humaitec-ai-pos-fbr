@@ -1,19 +1,19 @@
 import { useState } from "react";
-
 import "./AuthPage.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-
 function AuthPage({ onAuthenticated }) {
   const [mode, setMode] = useState("login");
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
     password: "",
     confirm_password: "",
   });
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,12 +51,12 @@ function AuthPage({ onAuthenticated }) {
     const payload =
       mode === "signup"
         ? {
-            full_name: formData.full_name,
-            email: formData.email,
+            full_name: formData.full_name.trim(),
+            email: formData.email.trim(),
             password: formData.password,
           }
         : {
-            email: formData.email,
+            email: formData.email.trim(),
             password: formData.password,
           };
 
@@ -98,6 +98,14 @@ function AuthPage({ onAuthenticated }) {
         return;
       }
 
+      /*
+        Backend returns:
+        {
+          access_token: "...",
+          token_type: "bearer",
+          user: { id, full_name, email, role, ... }
+        }
+      */
       localStorage.setItem(
         "customer_token",
         data.access_token
@@ -105,10 +113,10 @@ function AuthPage({ onAuthenticated }) {
 
       localStorage.setItem(
         "customer",
-        JSON.stringify(data.customer)
+        JSON.stringify(data.user)
       );
 
-      onAuthenticated(data.customer);
+      onAuthenticated(data.user);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -121,6 +129,7 @@ function AuthPage({ onAuthenticated }) {
       <section className="auth-card">
         <div className="auth-brand">
           <span>H</span>
+
           <div>
             <strong>HUMAITEC</strong>
             <small>POS & FBR SYSTEM</small>
@@ -130,21 +139,19 @@ function AuthPage({ onAuthenticated }) {
         <h1>
           {mode === "login"
             ? "Welcome back"
-            : "Create your account"}
+            : "Create cashier account"}
         </h1>
 
         <p>
           {mode === "login"
             ? "Sign in to continue to HUMAITEC."
-            : "Create an account to use HUMAITEC services."}
+            : "New accounts are created with cashier access."}
         </p>
 
         <div className="auth-tabs">
           <button
             type="button"
-            className={
-              mode === "login" ? "active" : ""
-            }
+            className={mode === "login" ? "active" : ""}
             onClick={() => switchMode("login")}
           >
             Sign In
@@ -152,9 +159,7 @@ function AuthPage({ onAuthenticated }) {
 
           <button
             type="button"
-            className={
-              mode === "signup" ? "active" : ""
-            }
+            className={mode === "signup" ? "active" : ""}
             onClick={() => switchMode("signup")}
           >
             Sign Up
@@ -165,6 +170,7 @@ function AuthPage({ onAuthenticated }) {
           {mode === "signup" && (
             <label>
               Full Name
+
               <input
                 type="text"
                 name="full_name"
@@ -179,6 +185,7 @@ function AuthPage({ onAuthenticated }) {
 
           <label>
             Email Address
+
             <input
               type="email"
               name="email"
@@ -191,6 +198,7 @@ function AuthPage({ onAuthenticated }) {
 
           <label>
             Password
+
             <input
               type="password"
               name="password"
@@ -205,6 +213,7 @@ function AuthPage({ onAuthenticated }) {
           {mode === "signup" && (
             <label>
               Confirm Password
+
               <input
                 type="password"
                 name="confirm_password"
@@ -226,7 +235,7 @@ function AuthPage({ onAuthenticated }) {
               ? "Please wait..."
               : mode === "login"
                 ? "Sign In"
-                : "Create Account"}
+                : "Create Cashier Account"}
           </button>
         </form>
 

@@ -34,3 +34,4 @@ watchfiles==1.2.0
 websockets==17.1
 passlib==1.7.4
 python-jose[cryptography]==3.3.0
+email-validator

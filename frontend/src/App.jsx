@@ -12,15 +12,12 @@ import "./index.css";
 const API_URL =
   import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-
 function App() {
   const [customer, setCustomer] = useState(() => {
     try {
       const savedCustomer = localStorage.getItem("customer");
 
-      return savedCustomer
-        ? JSON.parse(savedCustomer)
-        : null;
+      return savedCustomer ? JSON.parse(savedCustomer) : null;
     } catch {
       return null;
     }
@@ -39,7 +36,9 @@ function App() {
     backendStatus: "Loading...",
   });
 
-  const menuItems = [
+  const isAdmin = customer?.role === "admin";
+
+  const adminMenuItems = [
     { name: "Dashboard", icon: "▦" },
     { name: "Products", icon: "□" },
     { name: "Checkout", icon: "⌁" },
@@ -48,9 +47,35 @@ function App() {
     { name: "AI Forecast", icon: "◈" },
   ];
 
+  const cashierMenuItems = [
+    { name: "Checkout", icon: "⌁" },
+  ];
+
+  const menuItems = isAdmin
+    ? adminMenuItems
+    : cashierMenuItems;
+
+  useEffect(() => {
+    if (!customer) {
+      return;
+    }
+
+    setPage(isAdmin ? "Dashboard" : "Checkout");
+  }, [customer, isAdmin]);
+
   useEffect(() => {
     if (!customer) {
       setLoading(false);
+      return;
+    }
+
+    if (!isAdmin) {
+      setLoading(false);
+      setError("");
+      setDashboardData((currentData) => ({
+        ...currentData,
+        backendStatus: "System Online",
+      }));
       return;
     }
 
@@ -122,9 +147,14 @@ function App() {
     }
 
     loadDashboardData();
-  }, [customer]);
+  }, [customer, isAdmin]);
 
   function handleAuthenticated(authenticatedCustomer) {
+    localStorage.setItem(
+      "customer",
+      JSON.stringify(authenticatedCustomer)
+    );
+
     setCustomer(authenticatedCustomer);
   }
 
@@ -137,6 +167,10 @@ function App() {
   }
 
   function renderPageContent() {
+    if (!isAdmin) {
+      return <CheckoutPage />;
+    }
+
     if (page === "Products") {
       return <ProductsPage />;
     }
@@ -162,14 +196,14 @@ function App() {
         <section className="dashboard-hero">
           <div>
             <p className="eyebrow">
-              POINT OF SALE OVERVIEW
+              ADMINISTRATION OVERVIEW
             </p>
 
             <h3>Welcome back to HUMAITEC POS</h3>
 
             <p>
-              Manage products, process quick sales, review
-              invoices, and monitor stock from one workspace.
+              Manage products, process sales, review invoices,
+              and monitor stock from one workspace.
             </p>
           </div>
 
@@ -255,8 +289,15 @@ function App() {
           </div>
         </div>
 
+        <div className="sidebar-user">
+          <strong>{customer.full_name}</strong>
+          <small>
+            {isAdmin ? "ADMIN ACCOUNT" : "CASHIER TERMINAL"}
+          </small>
+        </div>
+
         <p className="sidebar-section-label">
-          MAIN MENU
+          {isAdmin ? "ADMIN MENU" : "CASHIER MENU"}
         </p>
 
         <nav>
@@ -271,10 +312,7 @@ function App() {
               }
               onClick={() => setPage(item.name)}
             >
-              <span className="nav-icon">
-                {item.icon}
-              </span>
-
+              <span className="nav-icon">{item.icon}</span>
               {item.name}
             </button>
           ))}
@@ -282,7 +320,7 @@ function App() {
 
         <div className="sidebar-footer">
           <span className="online-dot" />
-          FastAPI connected
+          {isAdmin ? "Admin access" : "Cashier access"}
         </div>
       </aside>
 
@@ -290,10 +328,13 @@ function App() {
         <header className="topbar">
           <div>
             <p className="small-label">
-              HUMAITEC / OPERATIONS
+              HUMAITEC /{" "}
+              {isAdmin ? "ADMINISTRATION" : "POINT OF SALE"}
             </p>
 
-            <h2>{page}</h2>
+            <h2>
+              {isAdmin ? page : "POS Checkout"}
+            </h2>
           </div>
 
           <div className="topbar-actions">
@@ -320,20 +361,18 @@ function App() {
           </div>
         </header>
 
-        {error && (
+        {error && isAdmin && (
           <p className="error-message">{error}</p>
         )}
 
-        {page === "Dashboard" && (
+        {isAdmin && page === "Dashboard" && (
           <section className="metrics-grid">
             <article className="metric-card">
               <div className="metric-icon blue">□</div>
               <p>Total Products</p>
 
               <h3>
-                {loading
-                  ? "..."
-                  : dashboardData.totalProducts}
+                {loading ? "..." : dashboardData.totalProducts}
               </h3>
 
               <small>Available in inventory</small>
@@ -344,9 +383,7 @@ function App() {
               <p>Low Stock Items</p>
 
               <h3>
-                {loading
-                  ? "..."
-                  : dashboardData.lowStock}
+                {loading ? "..." : dashboardData.lowStock}
               </h3>
 
               <small>Need stock attention</small>
@@ -370,9 +407,7 @@ function App() {
               <p>FBR Status</p>
 
               <h3 className="fbr-text">
-                {loading
-                  ? "..."
-                  : dashboardData.fbrStatus}
+                {loading ? "..." : dashboardData.fbrStatus}
               </h3>
 
               <small>Latest invoice status</small>
